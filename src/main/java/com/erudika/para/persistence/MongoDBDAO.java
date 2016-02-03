@@ -26,6 +26,8 @@ import java.util.Map.Entry;
 import javax.inject.Singleton;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
+import org.bson.codecs.ObjectIdGenerator;
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.erudika.para.annotations.Locked;
@@ -49,7 +51,8 @@ import java.util.Collections;
 public class MongoDBDAO implements DAO {
 
 	private static final Logger logger = LoggerFactory.getLogger(MongoDBDAO.class);
-
+	private static final String _ID = "_id";
+			
 	public MongoDBDAO() { }
 
 	/////////////////////////////////////////////
@@ -60,9 +63,11 @@ public class MongoDBDAO implements DAO {
 	public <P extends ParaObject> String create(String appid, P so) {
 		if (so == null) {
 			return null;
-		}
-		if (StringUtils.isBlank(so.getId())) {
-			so.setId(Utils.getNewId());
+		}		
+		if(StringUtils.isBlank(so.getId()) || !ObjectId.isValid(so.getId())){
+			ObjectId o = new ObjectId();
+			so.setId(o.toHexString());
+			logger.info("Generated id: " + so.getId());
 		}
 		if (so.getTimestamp() == null) {
 			so.setTimestamp(Utils.timestamp());
@@ -109,13 +114,14 @@ public class MongoDBDAO implements DAO {
 			return null;
 		}
 		try {
-			setRowKey(key, row);
 			// check if exists a document with the same id
 			Document r = readRow(key, appid);
 			if(r != null) 
 				updateRow(key, appid, row); // replace the document instead of create a new document 
-			else
+			else{
+				setRowKey(key, row);
 				MongoDBUtils.getTable(appid).insertOne(row);
+			}
 		} catch (Exception e) {
 			logger.error(null, e);
 		}
@@ -128,7 +134,7 @@ public class MongoDBDAO implements DAO {
 			return;
 		}
 		try {
-			UpdateResult u = MongoDBUtils.getTable(appid).replaceOne(new Document(Config._KEY, key), row);
+			UpdateResult u = MongoDBUtils.getTable(appid).replaceOne(new Document(_ID, key), row);
 			logger.info("key: " + key + " updated count: " + u.getModifiedCount());			
 		} catch (Exception e) {
 			logger.error(null, e);
@@ -141,7 +147,7 @@ public class MongoDBDAO implements DAO {
 		}
 		Document row = null;
 		try {
-			row = MongoDBUtils.getTable(appid).find(new Document(Config._KEY, key)).first();
+			row = MongoDBUtils.getTable(appid).find(new Document(_ID, key)).first();
 		} catch (Exception e) {
 			logger.error(null, e);
 		}
@@ -153,7 +159,7 @@ public class MongoDBDAO implements DAO {
 			return;
 		}
 		try {
-			DeleteResult d = MongoDBUtils.getTable(appid).deleteOne(new Document(Config._KEY, key));
+			DeleteResult d = MongoDBUtils.getTable(appid).deleteOne(new Document(_ID, key));
 			logger.info("key: " + key + " deleted count: " + d.getDeletedCount());			
 		} catch (Exception e) {
 			logger.error(null, e);
@@ -197,13 +203,13 @@ public class MongoDBDAO implements DAO {
 		Map<String, P> results = new LinkedHashMap<String, P>(keys.size(), 0.75f, true);
 
 		BasicDBObject inQuery = new BasicDBObject();
-		inQuery.put(Config._KEY, new BasicDBObject("$in", keys));
+		inQuery.put(_ID, new BasicDBObject("$in", keys));
 
 		MongoCursor<Document> cursor = MongoDBUtils.getTable(appid).find(inQuery).iterator();
 		while(cursor.hasNext()) {
 			Document d = cursor.next();
 			P obj = fromRow(d);
-			results.put(d.getString(Config._KEY), obj);
+			results.put(d.getString(_ID), obj);
 		}
 
 		logger.debug("DAO.readAll() {}", results.size());
@@ -267,11 +273,11 @@ public class MongoDBDAO implements DAO {
 	}
 
 	private void setRowKey(String key, Document row) {
-		if (row.containsKey(Config._KEY)) {
+		if (row.containsKey(_ID)) {
 			logger.warn("Attribute name conflict:  "
-				+ "attribute {} will be overwritten! {} is a reserved keyword.", Config._KEY);
+				+ "attribute {} will be overwritten! {} is a reserved keyword.", _ID);
 		}
-		row.put(Config._KEY, key);
+		row.put(_ID, key);
 	}
 
 	//////////////////////////////////////////////////////
