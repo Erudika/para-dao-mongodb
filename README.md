@@ -19,10 +19,14 @@ and it also automatically indexes those objects and makes them searchable.
 
 Add the project as dependency through Maven and set the config property
 ```
-para.database = "MongoDBDAO"
+para.dao = "MongoDBDAO"
 ```
 This could be a Java system property or part of a `application.conf` file on the classpath.
 This tells Para to use the MongoDB Data Access Object (DAO) implementation instead of the default.
+
+### Requirement
+
+MongoDB version 3.2
 
 ### Maven
 
