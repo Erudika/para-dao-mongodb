@@ -34,5 +34,12 @@ Here's the Maven snippet to include in your `pom.xml`:
 </dependency>
 ```
 
+### Author
+
+<img src="https://avatars2.githubusercontent.com/u/795297?v=3&s=460" width="100" height="100">
+
+#### Luca Venturella
+
+
 ## License
 [Apache 2.0](LICENSE)
