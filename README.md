@@ -17,6 +17,8 @@ and it also automatically indexes those objects and makes them searchable.
 
 ## Getting started
 
+### Requirement
+MongoDB version 3.2
 
 ### Maven
 

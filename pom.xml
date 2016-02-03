@@ -27,7 +27,7 @@
 				<artifactId>mongo-java-driver</artifactId>
 				<version>3.2.1</version>
 			</dependency>
-
+			
 			<!-- TESTING -->
 			<dependency>
 				<groupId>org.mockito</groupId>
@@ -42,4 +42,9 @@
 				<scope>test</scope>
 			</dependency>
 		</dependencies>
+	<url>https://github.com/Erudika/para-dao-mongodb</url>
+  <organization>
+  	<name>Luca Venturella</name>
+  	<url>https://github.com/Erudika/para-dao-mongodb</url>
+  </organization>
 </project>
