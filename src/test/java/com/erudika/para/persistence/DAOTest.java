@@ -18,7 +18,7 @@
 package com.erudika.para.persistence;
 
 import com.erudika.para.core.App;
-import com.erudika.para.core.CoreUtils;
+import com.erudika.para.core.utils.CoreUtils;
 import com.erudika.para.core.Sysprop;
 import com.erudika.para.core.Tag;
 import com.erudika.para.core.User;
