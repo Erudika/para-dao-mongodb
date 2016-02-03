@@ -17,6 +17,12 @@ and it also automatically indexes those objects and makes them searchable.
 
 ## Getting started
 
+Add the project as dependency through Maven and set the config property
+```
+para.database = "MongoDBDAO"
+```
+This could be a Java system property or part of a `application.conf` file on the classpath.
+This tells Para to use the MongoDB Data Access Object (DAO) implementation instead of the default.
 
 ### Maven
 
@@ -34,7 +40,9 @@ Here's the Maven snippet to include in your `pom.xml`:
 
 ### Author
 
+<a href="https://github.com/lucav">
 <img src="https://avatars2.githubusercontent.com/u/795297?v=3&s=460" width="100" height="100">
+</a>
 
 #### Luca Venturella
 
