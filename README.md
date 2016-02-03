@@ -24,6 +24,15 @@ para.dao = "MongoDBDAO"
 This could be a Java system property or part of a `application.conf` file on the classpath.
 This tells Para to use the MongoDB Data Access Object (DAO) implementation instead of the default.
 
+Make sure you close the client on exit:
+```java
+Para.addDestroyListener(new DestroyListener() {
+	public void onDestroy() {
+		MongoDBUtils.shutdownClient();
+	}
+});
+```
+
 ### Requirement
 
 MongoDB version 3.2
