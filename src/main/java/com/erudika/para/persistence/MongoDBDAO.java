@@ -36,6 +36,9 @@ import com.erudika.para.utils.Pager;
 import com.erudika.para.utils.Utils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoCursor;
+import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
+
 import java.util.Collections;
 
 /**
@@ -107,7 +110,12 @@ public class MongoDBDAO implements DAO {
 		}
 		try {
 			setRowKey(key, row);
-			MongoDBUtils.getTable(appid).insertOne(row);
+			// check if exists a document with the same id
+			Document r = readRow(key, appid);
+			if(r != null) 
+				updateRow(key, appid, row); // replace the document instead of create a new document 
+			else
+				MongoDBUtils.getTable(appid).insertOne(row);
 		} catch (Exception e) {
 			logger.error(null, e);
 		}
@@ -120,8 +128,8 @@ public class MongoDBDAO implements DAO {
 			return;
 		}
 		try {
-			BasicDBObject searchQuery = new BasicDBObject().append(Config._KEY, key);
-			MongoDBUtils.getTable(appid).findOneAndReplace(searchQuery, row);
+			UpdateResult u = MongoDBUtils.getTable(appid).replaceOne(new Document(Config._KEY, key), row);
+			logger.info("key: " + key + " updated count: " + u.getModifiedCount());			
 		} catch (Exception e) {
 			logger.error(null, e);
 		}
@@ -133,8 +141,7 @@ public class MongoDBDAO implements DAO {
 		}
 		Document row = null;
 		try {
-			BasicDBObject searchQuery = new BasicDBObject().append(Config._KEY, key);
-			row = MongoDBUtils.getTable(appid).find(searchQuery).first();
+			row = MongoDBUtils.getTable(appid).find(new Document(Config._KEY, key)).first();
 		} catch (Exception e) {
 			logger.error(null, e);
 		}
@@ -146,8 +153,8 @@ public class MongoDBDAO implements DAO {
 			return;
 		}
 		try {
-			BasicDBObject searchQuery = new BasicDBObject().append(Config._KEY, key);
-			MongoDBUtils.getTable(appid).deleteOne(searchQuery);
+			DeleteResult d = MongoDBUtils.getTable(appid).deleteOne(new Document(Config._KEY, key));
+			logger.info("key: " + key + " deleted count: " + d.getDeletedCount());			
 		} catch (Exception e) {
 			logger.error(null, e);
 		}
@@ -211,10 +218,9 @@ public class MongoDBDAO implements DAO {
 
 	@Override
 	public <P extends ParaObject> void updateAll(String appid, List<P> objects) {
-		String table = MongoDBUtils.getTableNameForAppid(appid);
 		if (objects != null) {
 			for (P object : objects) {
-				update(table, object);
+				update(appid, object);
 			}
 		}
 		logger.debug("DAO.updateAll() {}", (objects == null) ? 0 : objects.size());

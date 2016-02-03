@@ -100,6 +100,7 @@ public final class MongoDBUtils {
 			return false;
 		}
 		try {
+			appid = getTableNameForAppid(appid);
 			MongoIterable<String> collectionNames = getClient().listCollectionNames();
 		    for (final String name : collectionNames) {
 		        if (name.equalsIgnoreCase(appid)) {
@@ -140,7 +141,7 @@ public final class MongoDBUtils {
 			return false;
 		}
 		try {
-			MongoCollection<Document> collection = getClient().getCollection(getTableNameForAppid(appid));
+			MongoCollection<Document> collection = getTable(appid);
 			collection.drop();
 		} catch (Exception e) {
 			logger.error(null, e);
