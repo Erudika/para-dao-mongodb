@@ -17,7 +17,6 @@
  */
 package com.erudika.para.persistence;
 
-import java.util.Arrays;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.slf4j.Logger;
@@ -29,6 +28,7 @@ import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
+import java.util.Arrays;
 import javax.inject.Singleton;
 
 /**
@@ -44,7 +44,7 @@ public final class MongoDBUtils {
 	private static final String DBHOST = Config.getConfigParam("mongodb.host", "localhost");
 	private static final int DBPORT = Config.getConfigInt("mongodb.port", 27017);
 	private static final String DBNAME = Config.getConfigParam("mongodb.database", Config.APP_NAME_NS);
-	private static final String DBUSER = Config.getConfigParam("mongodb.user", Config.PARA);
+	private static final String DBUSER = Config.getConfigParam("mongodb.user", "");
 	private static final String DBPASS = Config.getConfigParam("mongodb.password", "");
 
 	private MongoDBUtils() { }
@@ -59,10 +59,14 @@ public final class MongoDBUtils {
 		}
 
 		logger.info("MongoDB host:" + DBHOST + " port:" + DBPORT + " name:" + DBNAME);
-		MongoCredential credential = MongoCredential.createCredential(DBUSER, DBNAME, DBPASS.toCharArray());
 		ServerAddress s = new ServerAddress(DBHOST, DBPORT);
-
-		mongodbClient = new MongoClient(s, Arrays.asList(credential));
+		if (!StringUtils.isBlank(DBUSER) && !StringUtils.isBlank(DBPASS)) {
+			MongoCredential credential = MongoCredential.createCredential(DBUSER, DBNAME, DBPASS.toCharArray());
+			mongodbClient = new MongoClient(s, Arrays.asList(credential));
+		} else {
+			mongodbClient = new MongoClient(s);
+		}
+		
 		mongodb = mongodbClient.getDatabase(DBNAME);
 
 		if (!existsTable(Config.APP_NAME_NS)) {
