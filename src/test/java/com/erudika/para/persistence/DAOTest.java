@@ -26,6 +26,8 @@ import com.erudika.para.search.Search;
 import com.erudika.para.utils.Utils;
 import java.util.Arrays;
 import java.util.Map;
+
+import org.bson.types.ObjectId;
 import org.junit.After;
 import static org.junit.Assert.*;
 import org.junit.Before;
@@ -50,14 +52,14 @@ public abstract class DAOTest {
 	public void setUp() {
 		CoreUtils.getInstance().setDao(dao);
 		CoreUtils.getInstance().setSearch(mock(Search.class));
-		u = new User("111");
+		u = new User(new ObjectId().toHexString());
 		u.setName("Name");
 		u.setGroups(User.Groups.USERS.toString());
 		u.setEmail("asd@asd.com");
 		u.setIdentifier(u.getEmail());
 		u.setPassword("123456");
 
-		t = new Tag("test");
+		t = new Tag(new ObjectId().toHexString());
 		t.setCount(3);
 
 		dao.create(u);
@@ -79,7 +81,7 @@ public abstract class DAOTest {
 		User x = dao.read(u.getId());
 		assertEquals(u.getEmail(), x.getEmail());
 		x.setEmail(null); // on test, this CAN be empty or null because @NotBlank will not be checked on testing
-		assertNotNull(dao.create(x));
+		assertNotNull(dao.create(x)); // this create doesn't create a new object but replace the old one because the same id
 		x = dao.read(u.getId());
 		assertNull(x.getEmail());
 
@@ -116,7 +118,7 @@ public abstract class DAOTest {
 		assertNotNull(x.getUpdated());
 
 		// test updating locked fields
-		App app = new App("xyz");
+		App app = new App(new ObjectId().toHexString());
 		assertNotNull(dao.create(app));
 		String secret = app.getSecret();
 		assertNotNull(secret);
@@ -138,9 +140,9 @@ public abstract class DAOTest {
 
 	@Test
 	public void testCreateAllReadAllUpdateAllDeleteAll() {
-		Sysprop t1 = new Sysprop("sp1");
-		Sysprop t2 = new Sysprop("sp2");
-		Sysprop t3 = new Sysprop("sp3");
+		Sysprop t1 = new Sysprop(new ObjectId().toHexString());
+		Sysprop t2 = new Sysprop(new ObjectId().toHexString());
+		Sysprop t3 = new Sysprop(new ObjectId().toHexString());
 
 		// multi app support
 		dao.createAll(appid1, Arrays.asList(t1, t2, t3));
@@ -220,17 +222,21 @@ public abstract class DAOTest {
 		assertNull(dao.read(t2.getId()));
 		assertNull(dao.read(t3.getId()));
 
-		// update locked field test
-		Sysprop t4 = new Sysprop();
-		t4.setParentid("123");
+		Sysprop t4 = new Sysprop(new ObjectId().toHexString());
+		t4.setParentid(u.getId());
 		dao.create(t4);
-		t4.setParentid("321");
+		assertNotNull(t4.getParentid());
+		
+		t4.setParentid(t.getId());
 		t4.setType("type4");
 		dao.update(t4);
+		assertNotNull(t4.getId());
+		
 		Sysprop tr4 = dao.read(t4.getId());
-		assertEquals(t4.getId(), tr4.getId());
 		assertEquals(Utils.type(Sysprop.class), tr4.getType());
-		assertEquals("123", tr4.getParentid());
+		assertEquals(t4.getId(), tr4.getId());
+		assertNotNull(tr4.getParentid());			
+		assertEquals(t.getId(), tr4.getParentid());
 	}
 
 	@Test

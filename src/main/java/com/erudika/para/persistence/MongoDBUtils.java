@@ -22,6 +22,7 @@ import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.erudika.para.utils.Config;
+import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
@@ -124,6 +125,9 @@ public final class MongoDBUtils {
 		}
 		try {
 			getClient().createCollection(getTableNameForAppid(appid));
+			BasicDBObject k = new BasicDBObject();
+			k.append(Config._PARENTID, 1);
+			getClient().getCollection(appid).createIndex(k);
 		} catch (Exception e) {
 			logger.error(null, e);
 			return false;

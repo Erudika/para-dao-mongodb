@@ -38,9 +38,11 @@ import com.erudika.para.utils.Pager;
 import com.erudika.para.utils.Utils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoCursor;
+import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
+import java.util.ArrayList;
 import java.util.Collections;
 
 /**
@@ -114,14 +116,9 @@ public class MongoDBDAO implements DAO {
 			return null;
 		}
 		try {
-			// check if exists a document with the same id
-			Document r = readRow(key, appid);
-			if(r != null) 
-				updateRow(key, appid, row); // replace the document instead of create a new document 
-			else{
-				setRowKey(key, row);
-				MongoDBUtils.getTable(appid).insertOne(row);
-			}
+			// if there isn't a document with the same id then create a new document 
+			// else replace the document with the same id with the new one
+			MongoDBUtils.getTable(appid).replaceOne(new Document(_ID, key), row, new UpdateOptions().upsert(true));			
 		} catch (Exception e) {
 			logger.error(null, e);
 		}
@@ -134,6 +131,7 @@ public class MongoDBDAO implements DAO {
 			return;
 		}
 		try {
+			// this is used replaceOne because if you call updateOne seems to ignore the null valued fields (still mantain the old value after the update)
 			UpdateResult u = MongoDBUtils.getTable(appid).replaceOne(new Document(_ID, key), row);
 			logger.info("key: " + key + " updated count: " + u.getModifiedCount());			
 		} catch (Exception e) {
@@ -177,18 +175,7 @@ public class MongoDBDAO implements DAO {
 		}
 
 		for (ParaObject object : objects) {
-			if (StringUtils.isBlank(object.getId())) {
-				object.setId(Utils.getNewId());
-			}
-			if (object.getTimestamp() == null) {
-				object.setTimestamp(Utils.timestamp());
-			}
-			object.setUpdated(Utils.timestamp());
-			object.setAppid(appid);
-			Document row = toRow(object, null);
-			setRowKey(object.getId(), row);
-
-			MongoDBUtils.getTable(appid).insertOne(row);
+			create(appid, object);			
 		}
 
 		logger.debug("DAO.createAll() {}", (objects == null) ? 0 : objects.size());
@@ -237,9 +224,13 @@ public class MongoDBDAO implements DAO {
 		if (objects == null || objects.isEmpty() || StringUtils.isBlank(appid)) {
 			return;
 		}
+		BasicDBObject query2 = new BasicDBObject();
+		List<String> list = new ArrayList<String>();
 		for (ParaObject object : objects) {
-			delete(appid, object);
+			list.add(object.getId());
 		}
+		query2.put(_ID, new BasicDBObject("$in", list));
+		MongoDBUtils.getTable(appid).deleteMany(query2);
 		logger.debug("DAO.deleteAll() {}", objects.size());
 	}
 
@@ -254,8 +245,11 @@ public class MongoDBDAO implements DAO {
 		}
 		for (Entry<String, Object> entry : ParaObjectUtils.getAnnotatedFields(so, filter).entrySet()) {
 			Object value = entry.getValue();
-			if (value != null && !StringUtils.isBlank(value.toString())) {
-				row.put(entry.getKey(), value.toString());
+			if (value != null && !StringUtils.isBlank(value.toString())) {	
+				if(entry.getKey().equals(Config._ID)) // "id" in paraobject is translated to "_ID" mongodb
+					row.put(_ID, value.toString());
+				else
+					row.put(entry.getKey(), value.toString());
 			}
 		}
 		return row;
@@ -267,7 +261,10 @@ public class MongoDBDAO implements DAO {
 		}
 		Map<String, Object> props = new HashMap<String, Object>();
 		for (Entry<String, Object> col : row.entrySet()) {
-			props.put(col.getKey(), col.getValue().toString());
+			if(col.getKey().equals(_ID)) // "_ID" mongodb is translated to "id" in paraobject  
+				props.put(Config._ID, col.getValue().toString());
+			else
+				props.put(col.getKey(), col.getValue().toString());
 		}
 		return ParaObjectUtils.setAnnotatedFields(props);
 	}
