@@ -19,6 +19,7 @@ package com.erudika.para.persistence;
 
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.erudika.para.utils.Config;
@@ -30,6 +31,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
 import java.util.Arrays;
+
 import javax.inject.Singleton;
 
 /**
@@ -209,4 +211,7 @@ public final class MongoDBUtils {
 		}
 	}
 
+	public static String generateNewId(){
+		return new ObjectId().toHexString();
+	}
 }

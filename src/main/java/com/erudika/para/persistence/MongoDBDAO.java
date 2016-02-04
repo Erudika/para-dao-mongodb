@@ -25,8 +25,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import javax.inject.Singleton;
 import org.apache.commons.lang3.StringUtils;
+import org.bson.BsonObjectId;
 import org.bson.Document;
-import org.bson.codecs.ObjectIdGenerator;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,10 +66,10 @@ public class MongoDBDAO implements DAO {
 		if (so == null) {
 			return null;
 		}		
+		
 		if(StringUtils.isBlank(so.getId()) || !ObjectId.isValid(so.getId())){
-			ObjectId o = new ObjectId();
-			so.setId(o.toHexString());
-			logger.info("Generated id: " + so.getId());
+			so.setId(MongoDBUtils.generateNewId());
+			logger.debug("Generated id: " + so.getId());
 		}
 		if (so.getTimestamp() == null) {
 			so.setTimestamp(Utils.timestamp());
@@ -94,7 +94,7 @@ public class MongoDBDAO implements DAO {
 	public <P extends ParaObject> void update(String appid, P so) {
 		if (so != null && so.getId() != null) {
 			so.setUpdated(Utils.timestamp());
-			updateRow(so.getId(), appid, toRow(so, Locked.class));
+			updateRow(so.getId(), appid, toRow(so, Locked.class, true));
 			logger.debug("DAO.update() {}", so.getId());
 		}
 	}
@@ -131,9 +131,8 @@ public class MongoDBDAO implements DAO {
 			return;
 		}
 		try {
-			// this is used replaceOne because if you call updateOne seems to ignore the null valued fields (still mantain the old value after the update)
-			UpdateResult u = MongoDBUtils.getTable(appid).replaceOne(new Document(_ID, key), row);
-			logger.info("key: " + key + " updated count: " + u.getModifiedCount());			
+			UpdateResult u = MongoDBUtils.getTable(appid).updateOne(new Document(_ID, key), new Document("$set", row));
+			logger.debug("key: " + key + " updated count: " + u.getModifiedCount());			
 		} catch (Exception e) {
 			logger.error(null, e);
 		}
@@ -146,6 +145,7 @@ public class MongoDBDAO implements DAO {
 		Document row = null;
 		try {
 			row = MongoDBUtils.getTable(appid).find(new Document(_ID, key)).first();
+			logger.debug("id: " + key + " row null: " + (row == null));
 		} catch (Exception e) {
 			logger.error(null, e);
 		}
@@ -158,7 +158,7 @@ public class MongoDBDAO implements DAO {
 		}
 		try {
 			DeleteResult d = MongoDBUtils.getTable(appid).deleteOne(new Document(_ID, key));
-			logger.info("key: " + key + " deleted count: " + d.getDeletedCount());			
+			logger.debug("key: " + key + " deleted count: " + d.getDeletedCount());			
 		} catch (Exception e) {
 			logger.error(null, e);
 		}
@@ -239,17 +239,22 @@ public class MongoDBDAO implements DAO {
 	/////////////////////////////////////////////
 
 	private <P extends ParaObject> Document toRow(P so, Class<? extends Annotation> filter) {
+		return toRow(so, filter, false);
+	}
+	
+	private <P extends ParaObject> Document toRow(P so, Class<? extends Annotation> filter, boolean setNullFields) {
 		Document row = new Document();
 		if (so == null) {
 			return row;
 		}
 		for (Entry<String, Object> entry : ParaObjectUtils.getAnnotatedFields(so, filter).entrySet()) {
 			Object value = entry.getValue();
-			if (value != null && !StringUtils.isBlank(value.toString())) {	
+			if ((value != null && !StringUtils.isBlank(value.toString()))
+					|| setNullFields) {	
 				if(entry.getKey().equals(Config._ID)) // "id" in paraobject is translated to "_ID" mongodb
 					row.put(_ID, value.toString());
 				else
-					row.put(entry.getKey(), value.toString());
+					row.put(entry.getKey(), value == null ? null : value.toString());
 			}
 		}
 		return row;
@@ -257,24 +262,17 @@ public class MongoDBDAO implements DAO {
 
 	private <P extends ParaObject> P fromRow(Document row) {
 		if (row == null || row.isEmpty()) {
+			logger.debug("row is null or empty");
 			return null;
 		}
 		Map<String, Object> props = new HashMap<String, Object>();
 		for (Entry<String, Object> col : row.entrySet()) {
 			if(col.getKey().equals(_ID)) // "_ID" mongodb is translated to "id" in paraobject  
-				props.put(Config._ID, col.getValue().toString());
+				props.put(Config._ID, col.getValue());
 			else
-				props.put(col.getKey(), col.getValue().toString());
+				props.put(col.getKey(), col.getValue());
 		}
 		return ParaObjectUtils.setAnnotatedFields(props);
-	}
-
-	private void setRowKey(String key, Document row) {
-		if (row.containsKey(_ID)) {
-			logger.warn("Attribute name conflict:  "
-				+ "attribute {} will be overwritten! {} is a reserved keyword.", _ID);
-		}
-		row.put(_ID, key);
 	}
 
 	//////////////////////////////////////////////////////

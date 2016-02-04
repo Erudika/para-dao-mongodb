@@ -27,12 +27,12 @@ import com.erudika.para.utils.Utils;
 import java.util.Arrays;
 import java.util.Map;
 
-import org.bson.types.ObjectId;
 import org.junit.After;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+
 import static org.mockito.Mockito.*;
 /**
  *
@@ -52,14 +52,14 @@ public abstract class DAOTest {
 	public void setUp() {
 		CoreUtils.getInstance().setDao(dao);
 		CoreUtils.getInstance().setSearch(mock(Search.class));
-		u = new User(new ObjectId().toHexString());
+		u = new User(MongoDBUtils.generateNewId());
 		u.setName("Name");
 		u.setGroups(User.Groups.USERS.toString());
 		u.setEmail("asd@asd.com");
 		u.setIdentifier(u.getEmail());
 		u.setPassword("123456");
 
-		t = new Tag(new ObjectId().toHexString());
+		t = new Tag(MongoDBUtils.generateNewId());
 		t.setCount(3);
 
 		dao.create(u);
@@ -112,13 +112,15 @@ public abstract class DAOTest {
 	@Test
 	public void testUpdate() {
 		u.setName("Test Name");
+		assertEquals(Utils.type(User.class), u.getType());
 		dao.update(u);
+		assertNotNull(u.getId());
 		User x = dao.read(u.getId());
 		assertEquals(u.getName(), x.getName());
 		assertNotNull(x.getUpdated());
 
 		// test updating locked fields
-		App app = new App(new ObjectId().toHexString());
+		App app = new App(MongoDBUtils.generateNewId());
 		assertNotNull(dao.create(app));
 		String secret = app.getSecret();
 		assertNotNull(secret);
@@ -140,9 +142,9 @@ public abstract class DAOTest {
 
 	@Test
 	public void testCreateAllReadAllUpdateAllDeleteAll() {
-		Sysprop t1 = new Sysprop(new ObjectId().toHexString());
-		Sysprop t2 = new Sysprop(new ObjectId().toHexString());
-		Sysprop t3 = new Sysprop(new ObjectId().toHexString());
+		Sysprop t1 = new Sysprop(MongoDBUtils.generateNewId());
+		Sysprop t2 = new Sysprop(MongoDBUtils.generateNewId());
+		Sysprop t3 = new Sysprop(MongoDBUtils.generateNewId());
 
 		// multi app support
 		dao.createAll(appid1, Arrays.asList(t1, t2, t3));
@@ -222,12 +224,13 @@ public abstract class DAOTest {
 		assertNull(dao.read(t2.getId()));
 		assertNull(dao.read(t3.getId()));
 
-		Sysprop t4 = new Sysprop(new ObjectId().toHexString());
+		Sysprop t4 = new Sysprop(MongoDBUtils.generateNewId());
 		t4.setParentid(u.getId());
 		dao.create(t4);
 		assertNotNull(t4.getParentid());
 		
-		t4.setParentid(t.getId());
+		//try update locked fields
+		t4.setParentid(t.getId()); 
 		t4.setType("type4");
 		dao.update(t4);
 		assertNotNull(t4.getId());
@@ -236,7 +239,7 @@ public abstract class DAOTest {
 		assertEquals(Utils.type(Sysprop.class), tr4.getType());
 		assertEquals(t4.getId(), tr4.getId());
 		assertNotNull(tr4.getParentid());			
-		assertEquals(t.getId(), tr4.getParentid());
+		assertEquals(u.getId(), tr4.getParentid());
 	}
 
 	@Test
