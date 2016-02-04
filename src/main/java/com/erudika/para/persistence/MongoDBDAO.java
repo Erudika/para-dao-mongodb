@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import javax.inject.Singleton;
 import org.apache.commons.lang3.StringUtils;
-import org.bson.BsonObjectId;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;

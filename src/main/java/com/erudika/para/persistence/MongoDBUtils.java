@@ -23,13 +23,13 @@ import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.erudika.para.utils.Config;
-import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
+
 import java.util.Arrays;
 
 import javax.inject.Singleton;
@@ -127,9 +127,9 @@ public final class MongoDBUtils {
 		}
 		try {
 			getClient().createCollection(getTableNameForAppid(appid));
-			BasicDBObject k = new BasicDBObject();
-			k.append(Config._PARENTID, 1);
-			getClient().getCollection(appid).createIndex(k);
+			// *** Don't need to create a secondary index here until when will be developed a full "Search" implementation for MongoDB ***
+			// create a default seconday index for parentid field as string
+			// getClient().getCollection(appid).createIndex(Indexes.text(Config._PARENTID));
 		} catch (Exception e) {
 			logger.error(null, e);
 			return false;
