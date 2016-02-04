@@ -211,6 +211,10 @@ public final class MongoDBUtils {
 		}
 	}
 
+	/**
+	 * Create a new unique objectid for MongoDB
+	 * @return the objectid as string
+	 */
 	public static String generateNewId(){
 		return new ObjectId().toHexString();
 	}

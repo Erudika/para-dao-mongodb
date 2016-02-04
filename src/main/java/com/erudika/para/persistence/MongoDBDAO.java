@@ -65,8 +65,7 @@ public class MongoDBDAO implements DAO {
 	public <P extends ParaObject> String create(String appid, P so) {
 		if (so == null) {
 			return null;
-		}		
-		
+		}				
 		if(StringUtils.isBlank(so.getId()) || !ObjectId.isValid(so.getId())){
 			so.setId(MongoDBUtils.generateNewId());
 			logger.debug("Generated id: " + so.getId());
@@ -173,11 +172,21 @@ public class MongoDBDAO implements DAO {
 		if (objects == null || objects.isEmpty() || StringUtils.isBlank(appid)) {
 			return;
 		}
-
-		for (ParaObject object : objects) {
-			create(appid, object);			
+		List<Document> documents = new ArrayList<Document>();
+		for (ParaObject so : objects) {
+			if(so == null) continue;
+			if(StringUtils.isBlank(so.getId()) || !ObjectId.isValid(so.getId())){
+				so.setId(MongoDBUtils.generateNewId());
+				logger.debug("Generated id: " + so.getId());
+			}
+			if (so.getTimestamp() == null) {
+				so.setTimestamp(Utils.timestamp());
+			}
+			so.setAppid(appid);
+			documents.add(toRow(so, null));
 		}
-
+		if(!documents.isEmpty())
+			MongoDBUtils.getTable(appid).insertMany(documents);
 		logger.debug("DAO.createAll() {}", (objects == null) ? 0 : objects.size());
 	}
 
@@ -224,13 +233,13 @@ public class MongoDBDAO implements DAO {
 		if (objects == null || objects.isEmpty() || StringUtils.isBlank(appid)) {
 			return;
 		}
-		BasicDBObject query2 = new BasicDBObject();
+		BasicDBObject query = new BasicDBObject();
 		List<String> list = new ArrayList<String>();
 		for (ParaObject object : objects) {
 			list.add(object.getId());
 		}
-		query2.put(_ID, new BasicDBObject("$in", list));
-		MongoDBUtils.getTable(appid).deleteMany(query2);
+		query.put(_ID, new BasicDBObject("$in", list));
+		MongoDBUtils.getTable(appid).deleteMany(query);
 		logger.debug("DAO.deleteAll() {}", objects.size());
 	}
 
