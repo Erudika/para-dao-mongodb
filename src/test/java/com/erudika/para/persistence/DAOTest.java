@@ -108,6 +108,11 @@ public abstract class DAOTest {
 		App app2 = new App("testappid");
 		assertTrue(app2.exists());
 		
+		Tag tag = new Tag("testtagid");
+		tag.setCount(10);
+		tag.create();
+		Tag tag2 = new Tag("testtagid");
+		assertTrue(tag2.exists());
 	}
 
 	@Test
