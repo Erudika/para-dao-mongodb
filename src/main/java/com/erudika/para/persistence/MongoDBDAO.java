@@ -64,10 +64,13 @@ public class MongoDBDAO implements DAO {
 	public <P extends ParaObject> String create(String appid, P so) {
 		if (so == null) {
 			return null;
-		}				
-		if(StringUtils.isBlank(so.getId()) || !ObjectId.isValid(so.getId())){
-			so.setId(MongoDBUtils.generateNewId());
-			logger.debug("Generated id: " + so.getId());
+		}	
+		
+		if (!StringUtils.startsWith(so.getId(), "app:") && !StringUtils.startsWith(so.getId(), "tag:")){
+			if(StringUtils.isBlank(so.getId()) || !ObjectId.isValid(so.getId())){
+				so.setId(MongoDBUtils.generateNewId());
+				logger.debug("Generated id: " + so.getId());
+			}
 		}
 		if (so.getTimestamp() == null) {
 			so.setTimestamp(Utils.timestamp());

@@ -23,6 +23,7 @@ import com.erudika.para.core.Sysprop;
 import com.erudika.para.core.Tag;
 import com.erudika.para.core.User;
 import com.erudika.para.search.Search;
+import com.erudika.para.utils.Config;
 import com.erudika.para.utils.Utils;
 import java.util.Arrays;
 import java.util.Map;
@@ -99,6 +100,14 @@ public abstract class DAOTest {
 		assertNotNull(dao.read(appid2, t.getId()));
 		assertNull(dao.read(t.getId()));
 		assertNull(dao.read(appid1, t.getId()));
+		
+		App app = new App("testappid");
+		app.setName("testappid");
+		app.setShared(false);
+		app.create();
+		App app2 = new App("testappid");
+		assertTrue(app2.exists());
+		
 	}
 
 	@Test
