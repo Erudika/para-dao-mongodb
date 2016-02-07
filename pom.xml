@@ -126,6 +126,9 @@
 						<goals>
 							<goal>stop</goal>
 						</goals>
+						<configuration>
+							<skip>${skipITs}</skip>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
