@@ -53,7 +53,7 @@ public class MongoDBDAO implements DAO {
 
 	private static final Logger logger = LoggerFactory.getLogger(MongoDBDAO.class);
 	private static final String _ID = "_id";
-			
+
 	public MongoDBDAO() { }
 
 	/////////////////////////////////////////////
@@ -64,9 +64,9 @@ public class MongoDBDAO implements DAO {
 	public <P extends ParaObject> String create(String appid, P so) {
 		if (so == null) {
 			return null;
-		}	
-		
-		if (!StringUtils.startsWith(so.getId(), "app:") && !StringUtils.startsWith(so.getId(), "tag:")){
+		}
+
+		if (!StringUtils.contains(so.getId(), Config.SEPARATOR)) {
 			if(StringUtils.isBlank(so.getId()) || !ObjectId.isValid(so.getId())){
 				so.setId(MongoDBUtils.generateNewId());
 				logger.debug("Generated id: " + so.getId());
@@ -117,9 +117,9 @@ public class MongoDBDAO implements DAO {
 			return null;
 		}
 		try {
-			// if there isn't a document with the same id then create a new document 
+			// if there isn't a document with the same id then create a new document
 			// else replace the document with the same id with the new one
-			MongoDBUtils.getTable(appid).replaceOne(new Document(_ID, key), row, new UpdateOptions().upsert(true));			
+			MongoDBUtils.getTable(appid).replaceOne(new Document(_ID, key), row, new UpdateOptions().upsert(true));
 		} catch (Exception e) {
 			logger.error(null, e);
 		}
@@ -133,7 +133,7 @@ public class MongoDBDAO implements DAO {
 		}
 		try {
 			UpdateResult u = MongoDBUtils.getTable(appid).updateOne(new Document(_ID, key), new Document("$set", row));
-			logger.debug("key: " + key + " updated count: " + u.getModifiedCount());			
+			logger.debug("key: " + key + " updated count: " + u.getModifiedCount());
 		} catch (Exception e) {
 			logger.error(null, e);
 		}
@@ -159,7 +159,7 @@ public class MongoDBDAO implements DAO {
 		}
 		try {
 			DeleteResult d = MongoDBUtils.getTable(appid).deleteOne(new Document(_ID, key));
-			logger.debug("key: " + key + " deleted count: " + d.getDeletedCount());			
+			logger.debug("key: " + key + " deleted count: " + d.getDeletedCount());
 		} catch (Exception e) {
 			logger.error(null, e);
 		}
@@ -252,7 +252,7 @@ public class MongoDBDAO implements DAO {
 	private <P extends ParaObject> Document toRow(P so, Class<? extends Annotation> filter) {
 		return toRow(so, filter, false);
 	}
-	
+
 	private <P extends ParaObject> Document toRow(P so, Class<? extends Annotation> filter, boolean setNullFields) {
 		Document row = new Document();
 		if (so == null) {
@@ -261,7 +261,7 @@ public class MongoDBDAO implements DAO {
 		for (Entry<String, Object> entry : ParaObjectUtils.getAnnotatedFields(so, filter).entrySet()) {
 			Object value = entry.getValue();
 			if ((value != null && !StringUtils.isBlank(value.toString()))
-					|| setNullFields) {	
+					|| setNullFields) {
 				if(entry.getKey().equals(Config._ID)) // "id" in paraobject is translated to "_ID" mongodb
 					row.put(_ID, value.toString());
 				else
@@ -278,7 +278,7 @@ public class MongoDBDAO implements DAO {
 		}
 		Map<String, Object> props = new HashMap<String, Object>();
 		for (Entry<String, Object> col : row.entrySet()) {
-			if(col.getKey().equals(_ID)) // "_ID" mongodb is translated to "id" in paraobject  
+			if(col.getKey().equals(_ID)) // "_ID" mongodb is translated to "id" in paraobject
 				props.put(Config._ID, col.getValue());
 			else
 				props.put(col.getKey(), col.getValue());
