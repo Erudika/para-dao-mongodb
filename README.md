@@ -19,16 +19,29 @@ and it also automatically indexes those objects and makes them searchable.
 
 ## Getting started
 
+The plugin is on Maven Central. Here's the Maven snippet to include in your `pom.xml`:
+
+```xml
+<dependency>
+  <groupId>com.erudika</groupId>
+  <artifactId>para-dao-mongodb</artifactId>
+  <version>1.18.0</version>
+</dependency>
+```
+
 Add the project as dependency through Maven and set the config property
 ```
 para.dao = "MongoDBDAO"
 ```
 This could be a Java system property or part of a `application.conf` file on the classpath.
 This tells Para to use the MongoDB Data Access Object (DAO) implementation instead of the default.
-Alternatively you can build it and and unzip the file `para-dao-mongodb.zip` into a `lib` folder alongside the server
-WAR file `para-server.war`. Para will look for plugins inside `lib` and pick up the MongoDB plugin.
 
-Make sure you close the client on exit:
+
+Alternatively you can build the project with `mvn clean install` and unzip the file `target/para-dao-mongodb.zip`
+into a `lib` folder alongside the server WAR file `para-server.war`. Para will look for plugins inside `lib`
+and pick up the MongoDB plugin.
+
+Finally, make sure you close the client in your code on exit:
 ```java
 Para.addDestroyListener(new DestroyListener() {
 	public void onDestroy() {
@@ -41,18 +54,6 @@ Para.addDestroyListener(new DestroyListener() {
 
 - MongoDB Java Driver for v3.2
 - [Para Core](https://github.com/Erudika/para)
-
-### Maven
-
-Here's the Maven snippet to include in your `pom.xml`:
-
-```xml
-<dependency>
-  <groupId>com.erudika</groupId>
-  <artifactId>para-dao-mongodb</artifactId>
-  <version>1.18.0</version>
-</dependency>
-```
 
 ### Author
 
