@@ -69,6 +69,7 @@
 		<skipTests>false</skipTests>
 		<skipITs>${skipTests}</skipITs>
 		<skipUTs>${skipTests}</skipUTs>
+		<gpg.keyname>A55DBB13</gpg.keyname>
 	</properties>
 
 	<dependencies>
@@ -268,7 +269,7 @@
 
 	<profiles>
 		<profile>
-			<id>release</id>
+			<id>para-dao-mongodb</id>
 			<activation>
 				<property>
 					<name>performRelease</name>
@@ -327,11 +328,11 @@
 
 	<distributionManagement>
 		<snapshotRepository>
-			<id>ossrh</id>
+			<id>oss.sonatype.org</id>
 			<url>http://oss.sonatype.org/content/repositories/snapshots</url>
 		</snapshotRepository>
 		<repository>
-			<id>ossrh</id>
+			<id>oss.sonatype.org</id>
 			<url>http://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
 		</repository>
 	</distributionManagement>
@@ -348,7 +349,7 @@
 			</snapshots>
 		</repository>
 		<repository>
-			<id>ossrh</id>
+			<id>oss.sonatype.org</id>
 			<url>http://oss.sonatype.org/content/repositories/releases/</url>
 		</repository>
 	</repositories>
