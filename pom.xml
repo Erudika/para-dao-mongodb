@@ -2,6 +2,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
+	<parent>
+		<groupId>com.jcabi</groupId>
+		<artifactId>parent</artifactId>
+		<version>0.42</version>
+	</parent>
+
 	<groupId>com.erudika</groupId>
 	<artifactId>para-dao-mongodb</artifactId>
 	<version>1.18.1-SNAPSHOT</version>
@@ -105,6 +111,7 @@
 					<preparationGoals>clean test</preparationGoals>
 					<useReleaseProfile>false</useReleaseProfile>
 					<releaseProfiles>release</releaseProfiles>
+					<checkModificationExcludes></checkModificationExcludes>
 				</configuration>
 			</plugin>
 
@@ -161,7 +168,7 @@
 									<fileset dir="${project.basedir}/target/">
 										<include name="*.jar" />
 									</fileset>
-									<flattenmapper />
+									<flattenmapper/>
 								</copy>
 							</target>
 						</configuration>
@@ -271,6 +278,14 @@
 			<build>
 				<plugins>
 					<plugin>
+						<artifactId>maven-assembly-plugin</artifactId>
+						<version>2.6</version>
+						<configuration>
+							<skipAssembly>true</skipAssembly>
+						</configuration>
+					</plugin>
+
+					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-source-plugin</artifactId>
 						<version>2.4</version>
@@ -280,11 +295,6 @@
 								<goals>
 									<goal>jar-no-fork</goal>
 								</goals>
-								<configuration>
-									<excludes>
-										<exclude>**/rebel.xml</exclude>
-									</excludes>
-								</configuration>
 							</execution>
 						</executions>
 					</plugin>
@@ -300,7 +310,7 @@
 									<goal>jar</goal>
 								</goals>
 								<configuration>
-									<stylesheetfile>para-core/src/main/javadoc/stylesheet.css</stylesheetfile>
+									<stylesheetfile>src/main/javadoc/stylesheet.css</stylesheetfile>
 									<show>public</show>
 									<aggregate>true</aggregate>
 									<quiet>true</quiet>
