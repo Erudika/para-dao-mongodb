@@ -3,6 +3,7 @@
 
 > ### MongoDB DAO plugin for Para
 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.erudika/para-dao-mongodb/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.erudika/para-dao-mongodb)
 [![Join the chat at https://gitter.im/Erudika/para](https://badges.gitter.im/Erudika/para.svg)](https://gitter.im/Erudika/para?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## What is this?
@@ -23,6 +24,8 @@ para.dao = "MongoDBDAO"
 ```
 This could be a Java system property or part of a `application.conf` file on the classpath.
 This tells Para to use the MongoDB Data Access Object (DAO) implementation instead of the default.
+Alternatively you can build it and and unzip the file `para-dao-mongodb.zip` into a `lib` folder alongside the server
+WAR file `para-server.war`. Para will look for plugins inside `lib` and pick up the MongoDB plugin.
 
 Make sure you close the client on exit:
 ```java
@@ -33,13 +36,12 @@ Para.addDestroyListener(new DestroyListener() {
 });
 ```
 
-### Requirement
+### Requirements
 
-MongoDB version 3.2
+- MongoDB Java Driver for v3.2
+- `para-core`
 
 ### Maven
-
-TODO - upload to maven central
 
 Here's the Maven snippet to include in your `pom.xml`:
 
@@ -58,7 +60,6 @@ Here's the Maven snippet to include in your `pom.xml`:
 </a>
 
 #### Luca Venturella
-
 
 ## License
 [Apache 2.0](LICENSE)
