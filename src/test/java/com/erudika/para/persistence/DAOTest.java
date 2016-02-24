@@ -197,6 +197,7 @@ public abstract class DAOTest {
 		t2.setName("Name 2");
 		t3.setName("Name 3");
 
+		// these should go through (custom types support)
 		t1.setType("type1");
 		t2.setType("type2");
 		t3.setType("type3");
@@ -270,7 +271,7 @@ public abstract class DAOTest {
 
 		Pager p = new Pager(10);
 		assertTrue(dao.readPage(null, null).isEmpty());
-		assertFalse(dao.readPage(appid1, null).isEmpty());
+		assertFalse(dao.readPage(appid3, null).isEmpty());
 		assertEquals(10, dao.readPage(appid3, p).size()); // page 1
 		assertEquals(10, dao.readPage(appid3, p).size()); // page 2
 		assertEquals(2, dao.readPage(appid3, p).size());  // page 3
