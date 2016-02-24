@@ -25,7 +25,7 @@
 		<dependency>
 			<groupId>com.erudika</groupId>
 			<artifactId>para-core</artifactId>
-			<version>1.17.2-SNAPSHOT</version>
+			<version>1.18.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.mongodb</groupId>
@@ -50,7 +50,6 @@
 
 	<build>
 		<plugins>
-
 			<plugin>
 				<artifactId>maven-dependency-plugin</artifactId>
 				<version>2.10</version>
@@ -61,8 +60,53 @@
 							<goal>copy-dependencies</goal>
 						</goals>
 						<configuration>
+							<includeArtifactIds>mongo-java-driver</includeArtifactIds>
 							<outputDirectory>${project.build.directory}/lib</outputDirectory>
 						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.8</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target>
+								<copy todir="${project.build.directory}/lib">
+									<fileset dir="${project.basedir}/target/">
+										<include name="*.jar"/>
+									</fileset>
+									<flattenmapper/>
+								</copy>
+							</target>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.6</version>
+				<configuration>
+					<descriptors>
+						<descriptor>src/main/assembly/pack.xml</descriptor>
+					</descriptors>
+					<finalName>para-dao-mongodb</finalName>
+					<appendAssemblyId>false</appendAssemblyId>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id> <!-- this is used for inheritance merges -->
+						<phase>install</phase> <!-- append to the packaging phase. -->
+						<goals>
+							<goal>single</goal> <!-- goals == mojos -->
+						</goals>
 					</execution>
 				</executions>
 			</plugin>
@@ -114,7 +158,8 @@
 							<goal>start</goal>
 						</goals>
 						<configuration>
-							<port>27017</port>
+							<!-- Use different than default port to prevent conflicts -->
+							<port>37017</port>
 							<version>3.2.1</version>
 							<databaseDirectory>${project.build.directory}/mongotest</databaseDirectory>
 							<bindIp>127.0.0.1</bindIp>

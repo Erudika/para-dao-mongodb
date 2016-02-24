@@ -61,7 +61,7 @@ public final class MongoDBUtils {
 			return mongodb;
 		}
 
-		logger.info("MongoDB host:" + DBHOST + " port:" + DBPORT + " name:" + DBNAME);
+		logger.info("MongoDB host: " + DBHOST + ":" + DBPORT + ", database: " + DBNAME);
 		ServerAddress s = new ServerAddress(DBHOST, DBPORT);
 		if (!StringUtils.isBlank(DBUSER) && !StringUtils.isBlank(DBPASS)) {
 			MongoCredential credential = MongoCredential.createCredential(DBUSER, DBNAME, DBPASS.toCharArray());
@@ -69,7 +69,7 @@ public final class MongoDBUtils {
 		} else {
 			mongodbClient = new MongoClient(s);
 		}
-		
+
 		mongodb = mongodbClient.getDatabase(DBNAME);
 
 		if (!existsTable(Config.APP_NAME_NS)) {
@@ -84,7 +84,7 @@ public final class MongoDBUtils {
 
 	/**
 	 * Stops the client and releases resources.
-	 * <b>There's no need to call this explicitly!</b>
+	 * You can tell Para to call this on shutdown using {@code Para.addDestroyListener()}
 	 */
 	public static void shutdownClient() {
 		if (mongodbClient != null) {

@@ -23,8 +23,9 @@ import com.erudika.para.core.Sysprop;
 import com.erudika.para.core.Tag;
 import com.erudika.para.core.User;
 import com.erudika.para.search.Search;
-import com.erudika.para.utils.Config;
+import com.erudika.para.utils.Pager;
 import com.erudika.para.utils.Utils;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -45,6 +46,7 @@ public abstract class DAOTest {
 	protected static DAO dao;
 	protected static String appid1 = "testapp1";
 	protected static String appid2 = "testapp2";
+	protected static String appid3 = "testapp3";
 
 	private User u;
 	private Tag t;
@@ -100,14 +102,14 @@ public abstract class DAOTest {
 		assertNotNull(dao.read(appid2, t.getId()));
 		assertNull(dao.read(t.getId()));
 		assertNull(dao.read(appid1, t.getId()));
-		
+
 		App app = new App("testappid");
 		app.setName("testappid");
 		app.setShared(false);
 		app.create();
 		App app2 = new App("testappid");
 		assertTrue(app2.exists());
-		
+
 		Tag tag = new Tag("testtagid");
 		tag.setCount(10);
 		tag.create();
@@ -209,7 +211,7 @@ public abstract class DAOTest {
 		assertNotNull(t1.getId());
 		assertNotNull(t2.getId());
 		assertNotNull(t3.getId());
-		
+
 		Sysprop tr1 = dao.read(t1.getId());
 		Sysprop tr2 = dao.read(t2.getId());
 		Sysprop tr3 = dao.read(t3.getId());
@@ -217,7 +219,7 @@ public abstract class DAOTest {
 		assertNotNull(tr1);
 		assertNotNull(tr2);
 		assertNotNull(tr3);
-				
+
 		assertEquals(t1.getId(), tr1.getId());
 		assertEquals(t2.getId(), tr2.getId());
 		assertEquals(t3.getId(), tr3.getId());
@@ -242,22 +244,37 @@ public abstract class DAOTest {
 		t4.setParentid(u.getId());
 		dao.create(t4);
 		assertNotNull(t4.getParentid());
-		
+
 		//try update locked fields
-		t4.setParentid(t.getId()); 
+		t4.setParentid(t.getId());
 		t4.setType("type4");
 		dao.update(t4);
 		assertNotNull(t4.getId());
-		
+
 		Sysprop tr4 = dao.read(t4.getId());
 		assertEquals(Utils.type(Sysprop.class), tr4.getType());
 		assertEquals(t4.getId(), tr4.getId());
-		assertNotNull(tr4.getParentid());			
+		assertNotNull(tr4.getParentid());
 		assertEquals(u.getId(), tr4.getParentid());
 	}
 
 	@Test
 	public void testReadPage() {
-		// TODO
+		ArrayList<Sysprop> list = new ArrayList<Sysprop>();
+		for (int i = 0; i < 22; i++) {
+			Sysprop s = new Sysprop("id_" + i);
+			s.addProperty("prop" + i, i);
+			list.add(s);
+		}
+		dao.createAll(appid3, list);
+
+		Pager p = new Pager(10);
+		assertTrue(dao.readPage(null, null).isEmpty());
+		assertFalse(dao.readPage(appid1, null).isEmpty());
+		assertEquals(10, dao.readPage(appid3, p).size()); // page 1
+		assertEquals(10, dao.readPage(appid3, p).size()); // page 2
+		assertEquals(2, dao.readPage(appid3, p).size());  // page 3
+		assertTrue(dao.readPage(appid3, p).isEmpty());  // end
+		assertEquals(22, p.getCount());
 	}
 }

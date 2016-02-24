@@ -32,10 +32,12 @@ public class MongoDBDAOIT extends DAOTest {
 
 	@BeforeClass
 	public static void setUpClass() throws InterruptedException {
+		System.setProperty("para.mongodb.port", "37017");
 		dao = new MongoDBDAO();
 		MongoDBUtils.createTable(Config.APP_NAME_NS);
 		MongoDBUtils.createTable(appid1);
 		MongoDBUtils.createTable(appid2);
+		MongoDBUtils.createTable(appid3);
 	}
 
 	@AfterClass
@@ -43,6 +45,7 @@ public class MongoDBDAOIT extends DAOTest {
 		MongoDBUtils.deleteTable(Config.APP_NAME_NS);
 		MongoDBUtils.deleteTable(appid1);
 		MongoDBUtils.deleteTable(appid2);
+		MongoDBUtils.deleteTable(appid3);
 		MongoDBUtils.shutdownClient();
 	}
 

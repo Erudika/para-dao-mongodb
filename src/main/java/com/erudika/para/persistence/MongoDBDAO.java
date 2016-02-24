@@ -32,17 +32,23 @@ import org.slf4j.LoggerFactory;
 import com.erudika.para.annotations.Locked;
 import com.erudika.para.core.ParaObject;
 import com.erudika.para.core.utils.ParaObjectUtils;
+import static com.erudika.para.persistence.MongoDBUtils.getTable;
 import com.erudika.para.utils.Config;
 import com.erudika.para.utils.Pager;
 import com.erudika.para.utils.Utils;
 import com.mongodb.BasicDBObject;
+import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.MongoCursor;
+import com.mongodb.client.model.BulkWriteOptions;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.WriteModel;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
-
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.LinkedList;
+import org.bson.conversions.Bson;
 
 /**
  * MongoDB DAO implementation for Para.
@@ -65,9 +71,8 @@ public class MongoDBDAO implements DAO {
 		if (so == null) {
 			return null;
 		}
-
 		if (!StringUtils.contains(so.getId(), Config.SEPARATOR)) {
-			if(StringUtils.isBlank(so.getId()) || !ObjectId.isValid(so.getId())){
+			if (StringUtils.isBlank(so.getId()) || !ObjectId.isValid(so.getId())) {
 				so.setId(MongoDBUtils.generateNewId());
 				logger.debug("Generated id: " + so.getId());
 			}
@@ -119,7 +124,7 @@ public class MongoDBDAO implements DAO {
 		try {
 			// if there isn't a document with the same id then create a new document
 			// else replace the document with the same id with the new one
-			MongoDBUtils.getTable(appid).replaceOne(new Document(_ID, key), row, new UpdateOptions().upsert(true));
+			getTable(appid).replaceOne(new Document(_ID, key), row, new UpdateOptions().upsert(true));
 		} catch (Exception e) {
 			logger.error(null, e);
 		}
@@ -132,7 +137,7 @@ public class MongoDBDAO implements DAO {
 			return;
 		}
 		try {
-			UpdateResult u = MongoDBUtils.getTable(appid).updateOne(new Document(_ID, key), new Document("$set", row));
+			UpdateResult u = getTable(appid).updateOne(new Document(_ID, key), new Document("$set", row));
 			logger.debug("key: " + key + " updated count: " + u.getModifiedCount());
 		} catch (Exception e) {
 			logger.error(null, e);
@@ -145,7 +150,7 @@ public class MongoDBDAO implements DAO {
 		}
 		Document row = null;
 		try {
-			row = MongoDBUtils.getTable(appid).find(new Document(_ID, key)).first();
+			row = getTable(appid).find(new Document(_ID, key)).first();
 			logger.debug("id: " + key + " row null: " + (row == null));
 		} catch (Exception e) {
 			logger.error(null, e);
@@ -158,7 +163,7 @@ public class MongoDBDAO implements DAO {
 			return;
 		}
 		try {
-			DeleteResult d = MongoDBUtils.getTable(appid).deleteOne(new Document(_ID, key));
+			DeleteResult d = getTable(appid).deleteOne(new Document(_ID, key));
 			logger.debug("key: " + key + " deleted count: " + d.getDeletedCount());
 		} catch (Exception e) {
 			logger.error(null, e);
@@ -176,19 +181,21 @@ public class MongoDBDAO implements DAO {
 		}
 		List<Document> documents = new ArrayList<Document>();
 		for (ParaObject so : objects) {
-			if(so == null) continue;
-			if(StringUtils.isBlank(so.getId()) || !ObjectId.isValid(so.getId())){
-				so.setId(MongoDBUtils.generateNewId());
-				logger.debug("Generated id: " + so.getId());
+			if (so != null) {
+				if (StringUtils.isBlank(so.getId()) || !ObjectId.isValid(so.getId())) {
+					so.setId(MongoDBUtils.generateNewId());
+					logger.debug("Generated id: " + so.getId());
+				}
+				if (so.getTimestamp() == null) {
+					so.setTimestamp(Utils.timestamp());
+				}
+				so.setAppid(appid);
+				documents.add(toRow(so, null));
 			}
-			if (so.getTimestamp() == null) {
-				so.setTimestamp(Utils.timestamp());
-			}
-			so.setAppid(appid);
-			documents.add(toRow(so, null));
 		}
-		if(!documents.isEmpty())
-			MongoDBUtils.getTable(appid).insertMany(documents);
+		if (!documents.isEmpty()) {
+			getTable(appid).insertMany(documents);
+		}
 		logger.debug("DAO.createAll() {}", (objects == null) ? 0 : objects.size());
 	}
 
@@ -197,13 +204,11 @@ public class MongoDBDAO implements DAO {
 		if (keys == null || keys.isEmpty() || StringUtils.isBlank(appid)) {
 			return new LinkedHashMap<String, P>();
 		}
-
 		Map<String, P> results = new LinkedHashMap<String, P>(keys.size(), 0.75f, true);
-
 		BasicDBObject inQuery = new BasicDBObject();
 		inQuery.put(_ID, new BasicDBObject("$in", keys));
 
-		MongoCursor<Document> cursor = MongoDBUtils.getTable(appid).find(inQuery).iterator();
+		MongoCursor<Document> cursor = getTable(appid).find(inQuery).iterator();
 		while(cursor.hasNext()) {
 			Document d = cursor.next();
 			P obj = fromRow(d);
@@ -216,16 +221,61 @@ public class MongoDBDAO implements DAO {
 
 	@Override
 	public <P extends ParaObject> List<P> readPage(String appid, Pager pager) {
-		// TODO: Stub!
-		return Collections.emptyList();
+		LinkedList<P> results = new LinkedList<P>();
+		if (StringUtils.isBlank(appid)) {
+			return results;
+		}
+		if (pager == null) {
+			pager = new Pager();
+		}
+		try {
+			String lastKey = pager.getLastKey();
+			MongoCursor<Document> cursor;
+			Bson filter = Filters.gt(_ID, lastKey);
+			if (lastKey == null) {
+				cursor = getTable(appid).find().batchSize(pager.getLimit()).limit(pager.getLimit()).iterator();
+			} else {
+				cursor = getTable(appid).find(filter).batchSize(pager.getLimit()).limit(pager.getLimit()).iterator();
+			}
+			while (cursor.hasNext()) {
+				P obj = fromRow(cursor.next());
+				if (obj != null) {
+					results.add(obj);
+				}
+			}
+			if (!results.isEmpty()) {
+				pager.setLastKey(results.peekLast().getId());
+				pager.setCount(pager.getCount() + results.size());
+			}
+		} catch (Exception e) {
+			logger.error(null, e);
+		}
+		logger.debug("readPage() page: {}, results:", pager.getPage(), results.size());
+		return results;
 	}
 
 	@Override
 	public <P extends ParaObject> void updateAll(String appid, List<P> objects) {
-		if (objects != null) {
+		if (StringUtils.isBlank(appid) || objects == null) {
+			return;
+		}
+		try {
+			ArrayList<WriteModel<Document>> updates = new ArrayList<WriteModel<Document>>();
+			List<String> ids = new ArrayList<String>(objects.size());
 			for (P object : objects) {
-				update(appid, object);
+				if (object != null) {
+					object.setUpdated(Utils.timestamp());
+					Document id = new Document(_ID, object.getId());
+					Document data = new Document("$set", toRow(object, Locked.class, true));
+					UpdateOneModel<Document> um = new UpdateOneModel<Document>(id, data);
+					updates.add(um);
+					ids.add(object.getId());
+				}
 			}
+			BulkWriteResult res = getTable(appid).bulkWrite(updates, new BulkWriteOptions().ordered(true));
+			logger.debug("Updated: " + res.getModifiedCount() + ", keys: " + ids);
+		} catch (Exception e) {
+			logger.error(null, e);
 		}
 		logger.debug("DAO.updateAll() {}", (objects == null) ? 0 : objects.size());
 	}
@@ -241,7 +291,7 @@ public class MongoDBDAO implements DAO {
 			list.add(object.getId());
 		}
 		query.put(_ID, new BasicDBObject("$in", list));
-		MongoDBUtils.getTable(appid).deleteMany(query);
+		getTable(appid).deleteMany(query);
 		logger.debug("DAO.deleteAll() {}", objects.size());
 	}
 
@@ -260,12 +310,13 @@ public class MongoDBDAO implements DAO {
 		}
 		for (Entry<String, Object> entry : ParaObjectUtils.getAnnotatedFields(so, filter).entrySet()) {
 			Object value = entry.getValue();
-			if ((value != null && !StringUtils.isBlank(value.toString()))
-					|| setNullFields) {
-				if(entry.getKey().equals(Config._ID)) // "id" in paraobject is translated to "_ID" mongodb
+			if ((value != null && !StringUtils.isBlank(value.toString())) || setNullFields) {
+				// "id" in ParaObject is translated to "_ID" mongodb
+				if (entry.getKey().equals(Config._ID)) {
 					row.put(_ID, value.toString());
-				else
-					row.put(entry.getKey(), value == null ? null : value.toString());
+				} else {
+					row.put(entry.getKey(), (value == null) ? null : value.toString());
+				}
 			}
 		}
 		return row;
@@ -278,10 +329,12 @@ public class MongoDBDAO implements DAO {
 		}
 		Map<String, Object> props = new HashMap<String, Object>();
 		for (Entry<String, Object> col : row.entrySet()) {
-			if(col.getKey().equals(_ID)) // "_ID" mongodb is translated to "id" in paraobject
+			// "_ID" mongodb is translated to "id" in ParaObject
+			if (col.getKey().equals(_ID)) {
 				props.put(Config._ID, col.getValue());
-			else
+			} else {
 				props.put(col.getKey(), col.getValue());
+			}
 		}
 		return ParaObjectUtils.setAnnotatedFields(props);
 	}
