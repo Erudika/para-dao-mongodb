@@ -10,7 +10,7 @@
 
 	<groupId>com.erudika</groupId>
 	<artifactId>para-dao-mongodb</artifactId>
-	<version>1.18.1-SNAPSHOT</version>
+	<version>1.18.2</version>
 
 	<packaging>jar</packaging>
 	<name>Para MongoDB DAO</name>
