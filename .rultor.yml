@@ -17,4 +17,4 @@ release:
     echo "releasing ${tag}..."
     mvn versions:set "-DnewVersion=${tag}"
     git commit -am "${tag}"
-    mvn clean deploy -Prelease --settings /home/r/repo/settings.xml
+    mvn clean deploy -Prelease --settings /home/r/settings.xml
