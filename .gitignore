@@ -15,4 +15,4 @@ nb-configuration.xml
 /target/
 **/target/
 **/data/
-
+settings.xml
