@@ -69,7 +69,6 @@
 		<skipTests>false</skipTests>
 		<skipITs>${skipTests}</skipITs>
 		<skipUTs>${skipTests}</skipUTs>
-		<gpg.keyname>A55DBB13</gpg.keyname>
 	</properties>
 
 	<dependencies>
