@@ -14,7 +14,6 @@ release:
     - albogdano
     - lucav
   script: |
-    echo "releasing ${tag}..."
     mvn versions:set "-DnewVersion=${tag}"
     git commit -am "${tag}"
-    mvn clean deploy -Prelease --settings /home/r/settings.xml
+    mvn clean deploy -Ppara-dao-mongodb --settings /home/r/settings.xml
