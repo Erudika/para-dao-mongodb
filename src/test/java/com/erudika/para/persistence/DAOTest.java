@@ -27,6 +27,7 @@ import com.erudika.para.utils.Pager;
 import com.erudika.para.utils.Utils;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.After;
@@ -123,6 +124,12 @@ public abstract class DAOTest {
 		assertNull(dao.read("1"));
 		assertNotNull(dao.read(u.getId()));
 		assertEquals(u.getName(), dao.read(u.getId()).getName());
+
+		// test with a custom ID
+		Sysprop sp = new Sysprop("email@test.com");
+		sp.setName("test custom id");
+		dao.create(sp);
+		assertNotNull(dao.read("email@test.com"));
 	}
 
 	@Test
@@ -136,9 +143,16 @@ public abstract class DAOTest {
 		assertNotNull(x.getUpdated());
 
 		// test updating locked fields
-		App app = new App(MongoDBUtils.generateNewId());
+		App app = new App("xyz");
+		assertNull(app.getSecret());
 		assertNotNull(dao.create(app));
+		assertNull(app.getSecret());
+		assertNull(((App) dao.read(app.getId())).getSecret());
+		app.delete();
+		app.create();
+		assertNotNull(app.getSecret());
 		String secret = app.getSecret();
+		assertNotNull(((App) dao.read(app.getId())).getSecret());
 		assertNotNull(secret);
 		app.resetSecret();
 		dao.update(app);

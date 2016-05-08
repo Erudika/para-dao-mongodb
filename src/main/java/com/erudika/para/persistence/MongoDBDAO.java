@@ -26,7 +26,6 @@ import java.util.Map.Entry;
 import javax.inject.Singleton;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
-import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.erudika.para.annotations.Locked;
@@ -59,6 +58,7 @@ public class MongoDBDAO implements DAO {
 
 	private static final Logger logger = LoggerFactory.getLogger(MongoDBDAO.class);
 	private static final String _ID = "_id";
+	private static final String _OBJECT_ID = "_ObjectId";
 
 	public MongoDBDAO() { }
 
@@ -71,17 +71,15 @@ public class MongoDBDAO implements DAO {
 		if (so == null) {
 			return null;
 		}
-		if (!StringUtils.contains(so.getId(), Config.SEPARATOR)) {
-			if (StringUtils.isBlank(so.getId()) || !ObjectId.isValid(so.getId())) {
-				so.setId(MongoDBUtils.generateNewId());
-				logger.debug("Generated id: " + so.getId());
-			}
+		if (StringUtils.isBlank(so.getId())) {
+			so.setId(MongoDBUtils.generateNewId());
+			logger.debug("Generated id: " + so.getId());
 		}
 		if (so.getTimestamp() == null) {
 			so.setTimestamp(Utils.timestamp());
 		}
 		so.setAppid(appid);
-		createRow(so.getId(), appid, toRow(so, null));
+		createRow(so.getId(), appid, toRow(so, null, false, true));
 		logger.debug("DAO.create() {}", so.getId());
 		return so.getId();
 	}
@@ -182,7 +180,7 @@ public class MongoDBDAO implements DAO {
 		List<Document> documents = new ArrayList<Document>();
 		for (ParaObject so : objects) {
 			if (so != null) {
-				if (StringUtils.isBlank(so.getId()) || !ObjectId.isValid(so.getId())) {
+				if (StringUtils.isBlank(so.getId())) {
 					so.setId(MongoDBUtils.generateNewId());
 					logger.debug("Generated id: " + so.getId());
 				}
@@ -190,7 +188,7 @@ public class MongoDBDAO implements DAO {
 					so.setTimestamp(Utils.timestamp());
 				}
 				so.setAppid(appid);
-				documents.add(toRow(so, null));
+				documents.add(toRow(so, null, false, true));
 			}
 		}
 		if (!documents.isEmpty()) {
@@ -231,20 +229,21 @@ public class MongoDBDAO implements DAO {
 		try {
 			String lastKey = pager.getLastKey();
 			MongoCursor<Document> cursor;
-			Bson filter = Filters.gt(_ID, lastKey);
+			Bson filter = Filters.gt(_OBJECT_ID, lastKey);
 			if (lastKey == null) {
 				cursor = getTable(appid).find().batchSize(pager.getLimit()).limit(pager.getLimit()).iterator();
 			} else {
 				cursor = getTable(appid).find(filter).batchSize(pager.getLimit()).limit(pager.getLimit()).iterator();
 			}
 			while (cursor.hasNext()) {
-				P obj = fromRow(cursor.next());
+				Map<String, Object> row = documentToMap(cursor.next());
+				P obj = fromRow(row);
 				if (obj != null) {
 					results.add(obj);
+					pager.setLastKey((String) row.get(_OBJECT_ID));
 				}
 			}
 			if (!results.isEmpty()) {
-				pager.setLastKey(results.peekLast().getId());
 				pager.setCount(pager.getCount() + results.size());
 			}
 		} catch (Exception e) {
@@ -299,23 +298,29 @@ public class MongoDBDAO implements DAO {
 	//				MISC FUNCTIONS
 	/////////////////////////////////////////////
 
-	private <P extends ParaObject> Document toRow(P so, Class<? extends Annotation> filter) {
-		return toRow(so, filter, false);
+	private <P extends ParaObject> Document toRow(P so, Class<? extends Annotation> filter, boolean setNullFields) {
+		return toRow(so, filter, setNullFields, false);
 	}
 
-	private <P extends ParaObject> Document toRow(P so, Class<? extends Annotation> filter, boolean setNullFields) {
+	private <P extends ParaObject> Document toRow(P so, Class<? extends Annotation> filter,
+			boolean setNullFields, boolean setMongoId) {
 		Document row = new Document();
 		if (so == null) {
 			return row;
 		}
-		for (Entry<String, Object> entry : ParaObjectUtils.getAnnotatedFields(so, filter).entrySet()) {
+		// field values will be stored as they are - object structure and types will be preserved
+		for (Entry<String, Object> entry : ParaObjectUtils.getAnnotatedFields(so, filter, false).entrySet()) {
 			Object value = entry.getValue();
 			if ((value != null && !StringUtils.isBlank(value.toString())) || setNullFields) {
 				// "id" in ParaObject is translated to "_ID" mongodb
 				if (entry.getKey().equals(Config._ID)) {
 					row.put(_ID, value.toString());
 				} else {
-					row.put(entry.getKey(), (value == null) ? null : value.toString());
+					row.put(entry.getKey(), value);
+				}
+				if (setMongoId) {
+					// we add the native MongoDB id which will later be used for pagination and sorting
+					row.put(_OBJECT_ID, MongoDBUtils.generateNewId());
 				}
 			}
 		}
@@ -323,6 +328,14 @@ public class MongoDBDAO implements DAO {
 	}
 
 	private <P extends ParaObject> P fromRow(Document row) {
+		return fromRow(documentToMap(row));
+	}
+
+	private <P extends ParaObject> P fromRow(Map<String, Object> row) {
+		return ParaObjectUtils.setAnnotatedFields(row);
+	}
+
+	private Map<String, Object> documentToMap(Document row) {
 		if (row == null || row.isEmpty()) {
 			logger.debug("row is null or empty");
 			return null;
@@ -336,7 +349,7 @@ public class MongoDBDAO implements DAO {
 				props.put(col.getKey(), col.getValue());
 			}
 		}
-		return ParaObjectUtils.setAnnotatedFields(props);
+		return props;
 	}
 
 	//////////////////////////////////////////////////////

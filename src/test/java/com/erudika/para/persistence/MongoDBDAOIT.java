@@ -30,9 +30,13 @@ import org.junit.Test;
  */
 public class MongoDBDAOIT extends DAOTest {
 
+	private static final String APP_NAME = "para-test";
+
 	@BeforeClass
 	public static void setUpClass() throws InterruptedException {
 		System.setProperty("para.mongodb.port", "37017");
+		System.setProperty("para.app_name", APP_NAME);
+		System.setProperty("para.cluster_name", APP_NAME);
 		dao = new MongoDBDAO();
 		MongoDBUtils.createTable(Config.APP_NAME_NS);
 		MongoDBUtils.createTable(appid1);
