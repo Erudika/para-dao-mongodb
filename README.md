@@ -25,7 +25,7 @@ The plugin is on Maven Central. Here's the Maven snippet to include in your `pom
 <dependency>
   <groupId>com.erudika</groupId>
   <artifactId>para-dao-mongodb</artifactId>
-  <version>1.18.4</version>
+  <version>1.20.0</version>
 </dependency>
 ```
 
