@@ -17,7 +17,6 @@
  */
 package com.erudika.para.persistence;
 
-import com.erudika.para.utils.Config;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -30,15 +29,18 @@ import org.junit.Test;
  */
 public class MongoDBDAOIT extends DAOTest {
 
-	private static final String APP_NAME = "para-test";
+	private static final String ROOT_APP_NAME = "para-test";
+
+	public MongoDBDAOIT() {
+		super(new MongoDBDAO());
+	}
 
 	@BeforeClass
 	public static void setUpClass() throws InterruptedException {
 		System.setProperty("para.mongodb.port", "37017");
-		System.setProperty("para.app_name", APP_NAME);
-		System.setProperty("para.cluster_name", APP_NAME);
-		dao = new MongoDBDAO();
-		MongoDBUtils.createTable(Config.APP_NAME_NS);
+		System.setProperty("para.app_name", ROOT_APP_NAME);
+		System.setProperty("para.cluster_name", ROOT_APP_NAME);
+		MongoDBUtils.createTable(ROOT_APP_NAME);
 		MongoDBUtils.createTable(appid1);
 		MongoDBUtils.createTable(appid2);
 		MongoDBUtils.createTable(appid3);
@@ -46,7 +48,7 @@ public class MongoDBDAOIT extends DAOTest {
 
 	@AfterClass
 	public static void tearDownClass() {
-		MongoDBUtils.deleteTable(Config.APP_NAME_NS);
+		MongoDBUtils.deleteTable(ROOT_APP_NAME);
 		MongoDBUtils.deleteTable(appid1);
 		MongoDBUtils.deleteTable(appid2);
 		MongoDBUtils.deleteTable(appid3);

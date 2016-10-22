@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 
-import org.junit.After;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -43,40 +42,46 @@ import static org.mockito.Mockito.*;
 @Ignore
 public abstract class DAOTest {
 
-	protected static DAO dao;
+	private final DAO dao;
 	protected static String appid1 = "testapp1";
 	protected static String appid2 = "testapp2";
 	protected static String appid3 = "testapp3";
 
-	private User u;
-	private Tag t;
+	public DAOTest(DAO dao) {
+		this.dao = dao;
+	}
+
+	public DAO dao() {
+		return this.dao;
+	}
+
+	private static User u() {
+		User u = new User(Utils.getNewId());
+		u.setName("Name");
+		u.setGroups(User.Groups.USERS.toString());
+		u.setEmail(u.getId() + "@email.com");
+		u.setIdentifier(u.getEmail());
+		u.setPassword("123456");
+		return u;
+	}
+
+	private static Tag t() {
+		Tag t = new Tag("test-" + Utils.getNewId());
+		t.setCount(3);
+		return t;
+	}
 
 	@Before
 	public void setUp() {
 		CoreUtils.getInstance().setDao(dao);
 		CoreUtils.getInstance().setSearch(mock(Search.class));
-		u = new User(MongoDBUtils.generateNewId());
-		u.setName("Name");
-		u.setGroups(User.Groups.USERS.toString());
-		u.setEmail("asd@asd.com");
-		u.setIdentifier(u.getEmail());
-		u.setPassword("123456");
-
-		t = new Tag(MongoDBUtils.generateNewId());
-		t.setCount(3);
-
-		dao.create(u);
-		dao.create(t);
-	}
-
-	@After
-	public void tearDown() {
-		dao.delete(u);
-		dao.delete(t);
 	}
 
 	@Test
 	public void testCreate() {
+		User u = u();
+		Tag t = t();
+
 		assertNull(dao.create(null));
 		assertEquals(u.getId(), dao.create(u));
 		assertNotNull(u.getTimestamp());
@@ -106,7 +111,7 @@ public abstract class DAOTest {
 		App app = new App("testappid");
 		app.setName("testappid");
 		app.setSharingIndex(false);
-		app.create();
+		assertNotNull(app.create());
 		App app2 = new App("testappid");
 		assertTrue(app2.exists());
 
@@ -115,10 +120,16 @@ public abstract class DAOTest {
 		tag.create();
 		Tag tag2 = new Tag("testtagid");
 		assertTrue(tag2.exists());
+
+		dao.delete(u);
+		dao.delete(t);
 	}
 
 	@Test
 	public void testRead() {
+		User u = u();
+		dao.create(u);
+
 		assertNull(dao.read(null));
 		assertNull(dao.read("1"));
 		assertNotNull(dao.read(u.getId()));
@@ -129,10 +140,15 @@ public abstract class DAOTest {
 		sp.setName("test custom id");
 		dao.create(sp);
 		assertNotNull(dao.read("email@test.com"));
+
+		dao.delete(u);
 	}
 
 	@Test
 	public void testUpdate() {
+		User u = u();
+		dao.create(u);
+
 		u.setName("Test Name");
 		assertEquals(Utils.type(User.class), u.getType());
 		dao.update(u);
@@ -148,10 +164,12 @@ public abstract class DAOTest {
 		assertNull(app.getSecret());
 		assertNull(((App) dao.read(app.getId())).getSecret());
 		app.delete();
-		app.create();
+		assertNotNull(app.create());
 		assertNotNull(app.getSecret());
 		String secret = app.getSecret();
-		assertNotNull(((App) dao.read(app.getId())).getSecret());
+		App appRead = dao.read(app.getId());
+		assertNotNull(appRead);
+		assertNotNull(appRead.getSecret());
 		assertNotNull(secret);
 		app.resetSecret();
 		dao.update(app);
@@ -159,10 +177,25 @@ public abstract class DAOTest {
 		App app2 = dao.read(app.getId());
 		assertNotNull(app2);
 		assertEquals(secret, app2.getSecret());
+
+		App app3 = new App(app2.getId());
+		app3.setName("New App partial update");
+		app3.update();
+		assertEquals(secret, ((App) dao.read(app2.getId())).getSecret());
+
+		dao.delete(app);
+		dao.delete(u);
 	}
 
 	@Test
 	public void testDelete() {
+		User u = u();
+		Tag t = t();
+		dao.create(u);
+		dao.create(t);
+		assertNotNull(dao.read(u.getId()));
+		assertNotNull(dao.read(t.getId()));
+
 		dao.delete(u);
 		dao.delete(t);
 		assertNull(dao.read(u.getId()));
@@ -254,13 +287,14 @@ public abstract class DAOTest {
 		assertNull(dao.read(t2.getId()));
 		assertNull(dao.read(t3.getId()));
 
+		// try update locked fields
+		String parentId = Utils.getNewId();
 		Sysprop t4 = new Sysprop(MongoDBUtils.generateNewId());
-		t4.setParentid(u.getId());
+		t4.setParentid(parentId);
 		dao.create(t4);
 		assertNotNull(t4.getParentid());
 
-		//try update locked fields
-		t4.setParentid(t.getId());
+		t4.setParentid("cant_change_it");
 		t4.setType("type4");
 		dao.update(t4);
 		assertNotNull(t4.getId());
@@ -269,7 +303,7 @@ public abstract class DAOTest {
 		assertEquals(Utils.type(Sysprop.class), tr4.getType());
 		assertEquals(t4.getId(), tr4.getId());
 		assertNotNull(tr4.getParentid());
-		assertEquals(u.getId(), tr4.getParentid());
+		assertEquals(parentId, tr4.getParentid());
 	}
 
 	@Test
