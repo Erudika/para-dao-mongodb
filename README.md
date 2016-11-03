@@ -15,7 +15,7 @@ and it also automatically indexes those objects and makes them searchable.
 
 ## Documentation
 
-### [Read the Docs](http://paraio.org/docs)
+### [Read the Docs](https://paraio.org/docs)
 
 ## Getting started
 

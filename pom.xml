@@ -15,11 +15,11 @@
 	<packaging>jar</packaging>
 	<name>Para MongoDB DAO</name>
 	<description>A plugin for Para which enables support for MongoDB.</description>
-	<url>http://paraio.org</url>
+	<url>https://paraio.org</url>
 
 	<organization>
 		<name>Erudika</name>
-		<url>http://erudika.com</url>
+		<url>https://erudika.com</url>
 	</organization>
 
 	<licenses>
