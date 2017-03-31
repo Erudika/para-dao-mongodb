@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.erudika.para.utils.Config;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoCollection;
@@ -46,6 +47,8 @@ public final class MongoDBUtils {
 	private static MongoDatabase mongodb;
 	private static final String DBHOST = Config.getConfigParam("mongodb.host", "localhost");
 	private static final int DBPORT = Config.getConfigInt("mongodb.port", 27017);
+	private static final boolean SSL = Config.getConfigBoolean("mongodb.ssl_enabled", false);
+	private static final boolean SSL_ALLOW_ALL = Config.getConfigBoolean("mongodb.ssl_allow_all", false);
 	private static final String DBNAME = Config.getConfigParam("mongodb.database", Config.APP_NAME_NS);
 	private static final String DBUSER = Config.getConfigParam("mongodb.user", "");
 	private static final String DBPASS = Config.getConfigParam("mongodb.password", "");
@@ -63,11 +66,14 @@ public final class MongoDBUtils {
 
 		logger.info("MongoDB host: " + DBHOST + ":" + DBPORT + ", database: " + DBNAME);
 		ServerAddress s = new ServerAddress(DBHOST, DBPORT);
+		MongoClientOptions options = MongoClientOptions.builder().
+				sslEnabled(SSL).sslInvalidHostNameAllowed(SSL_ALLOW_ALL).build();
+
 		if (!StringUtils.isBlank(DBUSER) && !StringUtils.isBlank(DBPASS)) {
 			MongoCredential credential = MongoCredential.createCredential(DBUSER, DBNAME, DBPASS.toCharArray());
-			mongodbClient = new MongoClient(s, Arrays.asList(credential));
+			mongodbClient = new MongoClient(s, Arrays.asList(credential), options);
 		} else {
-			mongodbClient = new MongoClient(s);
+			mongodbClient = new MongoClient(s, options);
 		}
 
 		mongodb = mongodbClient.getDatabase(DBNAME);

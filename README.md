@@ -25,7 +25,7 @@ The plugin is on Maven Central. Here's the Maven snippet to include in your `pom
 <dependency>
   <groupId>com.erudika</groupId>
   <artifactId>para-dao-mongodb</artifactId>
-  <version>1.20.0</version>
+  <version>1.24.0</version>
 </dependency>
 ```
 
@@ -50,9 +50,22 @@ Para.addDestroyListener(new DestroyListener() {
 });
 ```
 
-### Requirements
+### Configuration
 
-- MongoDB Java Driver for v3.2
+Here are all the configuration properties for this plugin (these go inside your `application.conf`):
+```
+para.mongodb.host = "localhost"
+para.mongodb.port = 27017
+para.mongodb.database = "MyApp"
+para.mongodb.user = "user"
+para.mongodb.password = "pass"
+para.mongodb.ssl_enabled = false
+para.mongodb.ssl_allow_all = false
+```
+
+### Dependencies
+
+- MongoDB Java Driver for v3.4
 - [Para Core](https://github.com/Erudika/para)
 
 ### Author
