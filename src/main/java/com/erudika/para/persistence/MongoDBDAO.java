@@ -46,6 +46,7 @@ import com.mongodb.client.model.WriteModel;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import org.bson.conversions.Bson;
 
@@ -197,7 +198,7 @@ public class MongoDBDAO implements DAO {
 		if (!documents.isEmpty()) {
 			getTable(appid).insertMany(documents);
 		}
-		logger.debug("DAO.createAll() {}", (objects == null) ? 0 : objects.size());
+		logger.debug("DAO.createAll() {}", objects.size());
 	}
 
 	@Override
@@ -213,7 +214,9 @@ public class MongoDBDAO implements DAO {
 		while (cursor.hasNext()) {
 			Document d = cursor.next();
 			P obj = fromRow(d);
-			results.put(d.getString(_ID), obj);
+			if (d != null) {
+				results.put(d.getString(_ID), obj);
+			}
 		}
 
 		logger.debug("DAO.readAll() {}", results.size());
@@ -279,7 +282,7 @@ public class MongoDBDAO implements DAO {
 		} catch (Exception e) {
 			logger.error(null, e);
 		}
-		logger.debug("DAO.updateAll() {}", (objects == null) ? 0 : objects.size());
+		logger.debug("DAO.updateAll() {}", objects.size());
 	}
 
 	@Override
@@ -314,7 +317,7 @@ public class MongoDBDAO implements DAO {
 		// field values will be stored as they are - object structure and types will be preserved
 		for (Entry<String, Object> entry : ParaObjectUtils.getAnnotatedFields(so, filter, false).entrySet()) {
 			Object value = entry.getValue();
-			if ((value != null && !StringUtils.isBlank(value.toString())) || setNullFields) {
+			if (value != null && (!StringUtils.isBlank(value.toString()) || setNullFields)) {
 				// "id" in ParaObject is translated to "_ID" mongodb
 				if (entry.getKey().equals(Config._ID)) {
 					row.put(_ID, value.toString());
@@ -341,7 +344,7 @@ public class MongoDBDAO implements DAO {
 	private Map<String, Object> documentToMap(Document row) {
 		if (row == null || row.isEmpty()) {
 			logger.debug("row is null or empty");
-			return null;
+			return Collections.emptyMap();
 		}
 		Map<String, Object> props = new HashMap<String, Object>();
 		for (Entry<String, Object> col : row.entrySet()) {

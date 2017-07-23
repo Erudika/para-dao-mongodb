@@ -160,7 +160,9 @@ public final class MongoDBUtils {
 		}
 		try {
 			MongoCollection<Document> collection = getTable(appid);
-			collection.drop();
+			if (collection != null) {
+				collection.drop();
+			}
 			logger.info("Deleted MongoDB table '{}'.", getTableNameForAppid(appid));
 		} catch (Exception e) {
 			logger.error(null, e);
@@ -179,8 +181,8 @@ public final class MongoDBUtils {
 			return -1;
 		}
 		try {
-			MongoCollection<Document> td = getTable(appid);
-			return td.count();
+			MongoCollection<Document> collection = getTable(appid);
+			return (collection == null) ? 0 : collection.count();
 		} catch (Exception e) {
 			logger.error(null, e);
 		}
