@@ -15,6 +15,6 @@ echo "" >> changelog.txt && \
 git log $lastver..HEAD --oneline >> changelog.txt && \
 echo "" >> changelog.txt && \
 echo "" >> changelog.txt && \
-echo "### :package: [Download JAR](https://oss.sonatype.org/service/local/repositories/releases/content/com/erudika/para-search-mongodb/${ver}/para-search-mongodb-${ver}-shaded.jar)" >> changelog.txt && \
+echo "### :package: [Download JAR](https://oss.sonatype.org/service/local/repositories/releases/content/com/erudika/para-dao-mongodb/${ver}/para-dao-mongodb-${ver}-shaded.jar)" >> changelog.txt && \
 hub release create -F changelog.txt $ver && \
 rm changelog.txt
