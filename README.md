@@ -13,6 +13,8 @@
 It enables your application to store objects directly to a data store (NoSQL) or any relational database (RDBMS)
 and it also automatically indexes those objects and makes them searchable.
 
+This plugin allows Para to store data in a MongoDB database.
+
 ## Documentation
 
 ### [Read the Docs](https://paraio.org/docs)
@@ -25,30 +27,12 @@ The plugin is on Maven Central. Here's the Maven snippet to include in your `pom
 <dependency>
   <groupId>com.erudika</groupId>
   <artifactId>para-dao-mongodb</artifactId>
-  <version>1.24.0</version>
+  <version>{see_green_version_badge_above}</version>
 </dependency>
 ```
 
-Add the project as dependency through Maven and set the config property
-```
-para.dao = "MongoDBDAO"
-```
-This could be a Java system property or part of a `application.conf` file on the classpath.
-This tells Para to use the MongoDB Data Access Object (DAO) implementation instead of the default.
-
-
-Alternatively you can build the project with `mvn clean install` and unzip the file `target/para-dao-mongodb.zip`
-into a `lib` folder alongside the server WAR file `para-server.war`. Para will look for plugins inside `lib`
-and pick up the MongoDB plugin.
-
-Finally, make sure you close the client in your code on exit:
-```java
-Para.addDestroyListener(new DestroyListener() {
-	public void onDestroy() {
-		MongoDBUtils.shutdownClient();
-	}
-});
-```
+Alternatively you can download the JAR from the "Releases" tab above put it in a `lib` folder alongside the server
+WAR file `para-x.y.z.war`. Para will look for plugins inside `lib` and pick up the Elasticsearch plugin.
 
 ### Configuration
 
@@ -62,6 +46,13 @@ para.mongodb.password = "pass"
 para.mongodb.ssl_enabled = false
 para.mongodb.ssl_allow_all = false
 ```
+
+Finally, set the config property:
+```
+para.dao = "MongoDBDAO"
+```
+This could be a Java system property or part of a `application.conf` file on the classpath.
+This tells Para to use the MongoDB Data Access Object (DAO) implementation instead of the default.
 
 ### Dependencies
 

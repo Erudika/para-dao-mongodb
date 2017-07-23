@@ -17,6 +17,7 @@
  */
 package com.erudika.para.persistence;
 
+import com.erudika.para.core.App;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -49,14 +50,14 @@ public final class MongoDBUtils {
 	private static final int DBPORT = Config.getConfigInt("mongodb.port", 27017);
 	private static final boolean SSL = Config.getConfigBoolean("mongodb.ssl_enabled", false);
 	private static final boolean SSL_ALLOW_ALL = Config.getConfigBoolean("mongodb.ssl_allow_all", false);
-	private static final String DBNAME = Config.getConfigParam("mongodb.database", Config.APP_NAME_NS);
+	private static final String DBNAME = Config.getConfigParam("mongodb.database", Config.getRootAppIdentifier());
 	private static final String DBUSER = Config.getConfigParam("mongodb.user", "");
 	private static final String DBPASS = Config.getConfigParam("mongodb.password", "");
 
 	private MongoDBUtils() { }
 
 	/**
-	 * Returns a client instance for MongoDB
+	 * Returns a client instance for MongoDB.
 	 * @return a client that talks to MongoDB
 	 */
 	public static MongoDatabase getClient() {
@@ -78,12 +79,15 @@ public final class MongoDBUtils {
 
 		mongodb = mongodbClient.getDatabase(DBNAME);
 
-		if (!existsTable(Config.APP_NAME_NS)) {
-			createTable(Config.APP_NAME_NS);
+		if (!existsTable(Config.getRootAppIdentifier())) {
+			createTable(Config.getRootAppIdentifier());
 		}
 
-		// We don't have access to Para.addDestroyListener() here.
-		// Users will be responsible for calling shutDownClient().
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			public void run() {
+				shutdownClient();
+			}
+		});
 
 		return mongodb;
 	}
@@ -111,12 +115,12 @@ public final class MongoDBUtils {
 		try {
 			appid = getTableNameForAppid(appid);
 			MongoIterable<String> collectionNames = getClient().listCollectionNames();
-		    for (final String name : collectionNames) {
-		        if (name.equalsIgnoreCase(appid)) {
-		            return true;
-		        }
-		    }
-		    return false;
+			for (final String name : collectionNames) {
+				if (name.equalsIgnoreCase(appid)) {
+					return true;
+				}
+			}
+			return false;
 		} catch (Exception e) {
 			return false;
 		}
@@ -132,10 +136,12 @@ public final class MongoDBUtils {
 			return false;
 		}
 		try {
-			getClient().createCollection(getTableNameForAppid(appid));
+			String table = getTableNameForAppid(appid);
+			getClient().createCollection(table);
 			// *** Don't need to create a secondary index here until when will be developed a full "Search" implementation for MongoDB ***
 			// create a default seconday index for parentid field as string
 			// getClient().getCollection(appid).createIndex(Indexes.text(Config._PARENTID));
+			logger.info("Created MongoDB table '{}'.", table);
 		} catch (Exception e) {
 			logger.error(null, e);
 			return false;
@@ -155,6 +161,7 @@ public final class MongoDBUtils {
 		try {
 			MongoCollection<Document> collection = getTable(appid);
 			collection.drop();
+			logger.info("Deleted MongoDB table '{}'.", getTableNameForAppid(appid));
 		} catch (Exception e) {
 			logger.error(null, e);
 			return false;
@@ -181,7 +188,7 @@ public final class MongoDBUtils {
 	}
 
 	/**
-	 * Get the mongodb table requested
+	 * Get the mongodb table requested.
 	 * @param appid name of the collection
 	 * @return a Mongo collection
 	 */
@@ -212,16 +219,16 @@ public final class MongoDBUtils {
 		if (StringUtils.isBlank(appIdentifier)) {
 			return null;
 		} else {
-			return (appIdentifier.equals(Config.APP_NAME_NS) || appIdentifier.startsWith(Config.PARA.concat("-"))) ?
+			return (App.isRoot(appIdentifier) || appIdentifier.startsWith(Config.PARA.concat("-"))) ?
 					appIdentifier : Config.PARA + "-" + appIdentifier;
 		}
 	}
 
 	/**
-	 * Create a new unique objectid for MongoDB
+	 * Create a new unique objectid for MongoDB.
 	 * @return the objectid as string
 	 */
-	public static String generateNewId(){
+	public static String generateNewId() {
 		return new ObjectId().toHexString();
 	}
 }
