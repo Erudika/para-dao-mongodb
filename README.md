@@ -32,7 +32,7 @@ The plugin is on Maven Central. Here's the Maven snippet to include in your `pom
 ```
 
 Alternatively you can download the JAR from the "Releases" tab above put it in a `lib` folder alongside the server
-WAR file `para-x.y.z.war`. Para will look for plugins inside `lib` and pick up the Elasticsearch plugin.
+WAR file `para-x.y.z.war`. Para will look for plugins inside `lib` and pick up the MongoDB plugin.
 
 ### Configuration
 
