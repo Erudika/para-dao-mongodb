@@ -17,6 +17,8 @@
  */
 package com.erudika.para.persistence;
 
+import com.erudika.para.AppCreatedListener;
+import com.erudika.para.AppDeletedListener;
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -29,6 +31,7 @@ import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.erudika.para.annotations.Locked;
+import com.erudika.para.core.App;
 import com.erudika.para.core.ParaObject;
 import com.erudika.para.core.utils.ParaObjectUtils;
 import static com.erudika.para.persistence.MongoDBUtils.getTable;
@@ -58,13 +61,29 @@ import org.bson.conversions.Bson;
 public class MongoDBDAO implements DAO {
 
 	private static final Logger logger = LoggerFactory.getLogger(MongoDBDAO.class);
-	private static final String _ID = "_id";
-	private static final String _OBJECT_ID = "_ObjectId";
+	private static final String ID = "_id";
+	private static final String OBJECT_ID = "_ObjectId";
 
 	/**
 	 * Default constructor.
 	 */
-	public MongoDBDAO() { }
+	public MongoDBDAO() {
+		// set up automatic table creation and deletion
+		App.addAppCreatedListener(new AppCreatedListener() {
+			public void onAppCreated(App app) {
+				if (app != null && !app.isSharingTable()) {
+					MongoDBUtils.createTable(app.getAppIdentifier());
+				}
+			}
+		});
+		App.addAppDeletedListener(new AppDeletedListener() {
+			public void onAppDeleted(App app) {
+				if (app != null && !app.isSharingTable()) {
+					MongoDBUtils.deleteTable(app.getAppIdentifier());
+				}
+			}
+		});
+	}
 
 	/////////////////////////////////////////////
 	//			CORE FUNCTIONS
@@ -126,7 +145,7 @@ public class MongoDBDAO implements DAO {
 		try {
 			// if there isn't a document with the same id then create a new document
 			// else replace the document with the same id with the new one
-			getTable(appid).replaceOne(new Document(_ID, key), row, new UpdateOptions().upsert(true));
+			getTable(appid).replaceOne(new Document(ID, key), row, new UpdateOptions().upsert(true));
 		} catch (Exception e) {
 			logger.error(null, e);
 		}
@@ -139,7 +158,7 @@ public class MongoDBDAO implements DAO {
 			return;
 		}
 		try {
-			UpdateResult u = getTable(appid).updateOne(new Document(_ID, key), new Document("$set", row));
+			UpdateResult u = getTable(appid).updateOne(new Document(ID, key), new Document("$set", row));
 			logger.debug("key: " + key + " updated count: " + u.getModifiedCount());
 		} catch (Exception e) {
 			logger.error(null, e);
@@ -152,7 +171,7 @@ public class MongoDBDAO implements DAO {
 		}
 		Document row = null;
 		try {
-			row = getTable(appid).find(new Document(_ID, key)).first();
+			row = getTable(appid).find(new Document(ID, key)).first();
 			logger.debug("id: " + key + " row null: " + (row == null));
 		} catch (Exception e) {
 			logger.error(null, e);
@@ -165,7 +184,7 @@ public class MongoDBDAO implements DAO {
 			return;
 		}
 		try {
-			DeleteResult d = getTable(appid).deleteOne(new Document(_ID, key));
+			DeleteResult d = getTable(appid).deleteOne(new Document(ID, key));
 			logger.debug("key: " + key + " deleted count: " + d.getDeletedCount());
 		} catch (Exception e) {
 			logger.error(null, e);
@@ -208,14 +227,14 @@ public class MongoDBDAO implements DAO {
 		}
 		Map<String, P> results = new LinkedHashMap<String, P>(keys.size(), 0.75f, true);
 		BasicDBObject inQuery = new BasicDBObject();
-		inQuery.put(_ID, new BasicDBObject("$in", keys));
+		inQuery.put(ID, new BasicDBObject("$in", keys));
 
 		MongoCursor<Document> cursor = getTable(appid).find(inQuery).iterator();
 		while (cursor.hasNext()) {
 			Document d = cursor.next();
 			P obj = fromRow(d);
 			if (d != null) {
-				results.put(d.getString(_ID), obj);
+				results.put(d.getString(ID), obj);
 			}
 		}
 
@@ -235,7 +254,7 @@ public class MongoDBDAO implements DAO {
 		try {
 			String lastKey = pager.getLastKey();
 			MongoCursor<Document> cursor;
-			Bson filter = Filters.gt(_OBJECT_ID, lastKey);
+			Bson filter = Filters.gt(OBJECT_ID, lastKey);
 			if (lastKey == null) {
 				cursor = getTable(appid).find().batchSize(pager.getLimit()).limit(pager.getLimit()).iterator();
 			} else {
@@ -246,7 +265,7 @@ public class MongoDBDAO implements DAO {
 				P obj = fromRow(row);
 				if (obj != null) {
 					results.add(obj);
-					pager.setLastKey((String) row.get(_OBJECT_ID));
+					pager.setLastKey((String) row.get(OBJECT_ID));
 				}
 			}
 			if (!results.isEmpty()) {
@@ -270,7 +289,7 @@ public class MongoDBDAO implements DAO {
 			for (P object : objects) {
 				if (object != null) {
 					object.setUpdated(Utils.timestamp());
-					Document id = new Document(_ID, object.getId());
+					Document id = new Document(ID, object.getId());
 					Document data = new Document("$set", toRow(object, Locked.class, true));
 					UpdateOneModel<Document> um = new UpdateOneModel<Document>(id, data);
 					updates.add(um);
@@ -295,7 +314,7 @@ public class MongoDBDAO implements DAO {
 		for (ParaObject object : objects) {
 			list.add(object.getId());
 		}
-		query.put(_ID, new BasicDBObject("$in", list));
+		query.put(ID, new BasicDBObject("$in", list));
 		getTable(appid).deleteMany(query);
 		logger.debug("DAO.deleteAll() {}", objects.size());
 	}
@@ -320,13 +339,13 @@ public class MongoDBDAO implements DAO {
 			if (value != null && (!StringUtils.isBlank(value.toString()) || setNullFields)) {
 				// "id" in ParaObject is translated to "_ID" mongodb
 				if (entry.getKey().equals(Config._ID)) {
-					row.put(_ID, value.toString());
+					row.put(ID, value.toString());
 				} else {
 					row.put(entry.getKey(), value);
 				}
 				if (setMongoId) {
 					// we add the native MongoDB id which will later be used for pagination and sorting
-					row.put(_OBJECT_ID, MongoDBUtils.generateNewId());
+					row.put(OBJECT_ID, MongoDBUtils.generateNewId());
 				}
 			}
 		}
@@ -349,7 +368,7 @@ public class MongoDBDAO implements DAO {
 		Map<String, Object> props = new HashMap<String, Object>();
 		for (Entry<String, Object> col : row.entrySet()) {
 			// "_ID" mongodb is translated to "id" in ParaObject
-			if (col.getKey().equals(_ID)) {
+			if (col.getKey().equals(ID)) {
 				props.put(Config._ID, col.getValue());
 			} else {
 				props.put(col.getKey(), col.getValue());
