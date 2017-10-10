@@ -48,9 +48,12 @@ import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.WriteModel;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.bson.conversions.Bson;
 
 /**
@@ -63,6 +66,7 @@ public class MongoDBDAO implements DAO {
 	private static final Logger logger = LoggerFactory.getLogger(MongoDBDAO.class);
 	private static final String ID = "_id";
 	private static final String OBJECT_ID = "_ObjectId";
+	private static final Pattern FIELD_NAME_ENCODING_PATTERN = Pattern.compile("^Base64:.*?:(.*)$");
 
 	/**
 	 * Default constructor.
@@ -327,6 +331,7 @@ public class MongoDBDAO implements DAO {
 		return toRow(so, filter, setNullFields, false);
 	}
 
+	@SuppressWarnings("unchecked")
 	private <P extends ParaObject> Document toRow(P so, Class<? extends Annotation> filter,
 			boolean setNullFields, boolean setMongoId) {
 		Document row = new Document();
@@ -341,7 +346,11 @@ public class MongoDBDAO implements DAO {
 				if (entry.getKey().equals(Config._ID)) {
 					row.put(ID, value.toString());
 				} else {
-					row.put(entry.getKey(), value);
+					if (value instanceof Map) {
+						row.put(sanitizeField(entry.getKey()), sanitizeFields((Map<String, Object>) value));
+					} else {
+						row.put(sanitizeField(entry.getKey()), value);
+					}
 				}
 				if (setMongoId) {
 					// we add the native MongoDB id which will later be used for pagination and sorting
@@ -360,6 +369,7 @@ public class MongoDBDAO implements DAO {
 		return ParaObjectUtils.setAnnotatedFields(row);
 	}
 
+	@SuppressWarnings("unchecked")
 	private Map<String, Object> documentToMap(Document row) {
 		if (row == null || row.isEmpty()) {
 			logger.debug("row is null or empty");
@@ -367,14 +377,80 @@ public class MongoDBDAO implements DAO {
 		}
 		Map<String, Object> props = new HashMap<String, Object>();
 		for (Entry<String, Object> col : row.entrySet()) {
+			Object value = col.getValue();
 			// "_ID" mongodb is translated to "id" in ParaObject
 			if (col.getKey().equals(ID)) {
-				props.put(Config._ID, col.getValue());
+				props.put(Config._ID, value);
 			} else {
-				props.put(col.getKey(), col.getValue());
+				if (value instanceof Map) {
+					props.put(desanitizeField(col.getKey()), desanitizeFields((Map<String, Object>) value));
+				} else {
+					props.put(desanitizeField(col.getKey()), value);
+				}
 			}
 		}
 		return props;
+	}
+
+	/**
+	 * MongoDB doesn't like '$' and '.' in field names. This replaces all '.' and the first '$'
+	 * with '{Base64(.|$)}'. Ref: https://github.com/Erudika/scoold/issues/11
+	 * @param fieldName the old document key
+	 * @return a sanitized key
+	 */
+	String sanitizeField(String fieldName) {
+		if (!StringUtils.contains(fieldName, ".") && !StringUtils.startsWith(fieldName, "$")) {
+			return fieldName;
+		}
+		String b = "Base64:" + fieldName.replaceAll("^\\$+", "").replaceAll("\\.", "_") + ":" +
+				Utils.base64enc(fieldName.getBytes(UTF_8));
+		return b;
+	}
+
+	String desanitizeField(String fieldName) {
+		if (fieldName != null) {
+			Matcher m = FIELD_NAME_ENCODING_PATTERN.matcher(fieldName);
+			if (m.matches()) {
+				return Utils.base64dec(m.group(1));
+			}
+		}
+		return fieldName;
+	}
+
+		@SuppressWarnings("unchecked")
+	Map<String, Object> sanitizeFields(Map<String, Object> row) {
+		if (row != null) {
+			Map<String, Object> cleanRow = new HashMap<String, Object>(row.size());
+			for (Entry<String, Object> entry : row.entrySet()) {
+				String key = entry.getKey();
+				Object value = entry.getValue();
+				if (value instanceof Map) {
+					cleanRow.put(sanitizeField(key), sanitizeFields((Map<String, Object>) value));
+				} else {
+					cleanRow.put(sanitizeField(key), value);
+				}
+			}
+			return cleanRow;
+		}
+		return null;
+	}
+
+	@SuppressWarnings("unchecked")
+	Map<String, Object> desanitizeFields(Map<String, Object> row) {
+		if (row != null) {
+			Map<String, Object> cleanRow = new HashMap<String, Object>(row.size());
+			for (Entry<String, Object> entry : row.entrySet()) {
+				String key = entry.getKey();
+				Object value = entry.getValue();
+				if (value instanceof Map) {
+					cleanRow.put(desanitizeField(key), desanitizeFields((Map<String, Object>) value));
+				} else {
+					cleanRow.put(desanitizeField(key), value);
+				}
+			}
+			return cleanRow;
+		}
+		return null;
 	}
 
 	//////////////////////////////////////////////////////

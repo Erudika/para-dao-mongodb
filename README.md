@@ -54,6 +54,16 @@ para.dao = "MongoDBDAO"
 This could be a Java system property or part of a `application.conf` file on the classpath.
 This tells Para to use the MongoDB Data Access Object (DAO) implementation instead of the default.
 
+### Field name limitation
+
+Mongo enforces a restriction on all field names and does not allow `$` and `.` characters in field names.
+This plugin tries to avoid this by encoding such fields in Base64, following the pattern
+`Base64:{fieldName}:{encodedFieldName}`:
+```
+"$field.name" => "Base64:field_name:JGZpZWxkLm5hbWU="
+```
+The restricted characters are stripped and `.` is replaced with `_`.
+
 ### Dependencies
 
 - MongoDB Java Driver for v3.4
