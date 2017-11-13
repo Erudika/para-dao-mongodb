@@ -37,7 +37,7 @@ WAR file `para-x.y.z.war`. Para will look for plugins inside `lib` and pick up t
 ### Configuration
 
 Here are all the configuration properties for this plugin (these go inside your `application.conf`):
-```
+```ini
 para.mongodb.host = "localhost"
 para.mongodb.port = 27017
 para.mongodb.database = "MyApp"
