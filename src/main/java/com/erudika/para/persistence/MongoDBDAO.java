@@ -152,6 +152,7 @@ public class MongoDBDAO implements DAO {
 			getTable(appid).replaceOne(new Document(ID, key), row, new UpdateOptions().upsert(true));
 		} catch (Exception e) {
 			logger.error(null, e);
+			throwIfNecessary(e);
 		}
 		return key;
 	}
@@ -166,6 +167,7 @@ public class MongoDBDAO implements DAO {
 			logger.debug("key: " + key + " updated count: " + u.getModifiedCount());
 		} catch (Exception e) {
 			logger.error(null, e);
+			throwIfNecessary(e);
 		}
 	}
 
@@ -192,6 +194,7 @@ public class MongoDBDAO implements DAO {
 			logger.debug("key: " + key + " deleted count: " + d.getDeletedCount());
 		} catch (Exception e) {
 			logger.error(null, e);
+			throwIfNecessary(e);
 		}
 	}
 
@@ -204,22 +207,27 @@ public class MongoDBDAO implements DAO {
 		if (objects == null || objects.isEmpty() || StringUtils.isBlank(appid)) {
 			return;
 		}
-		List<Document> documents = new ArrayList<Document>();
-		for (ParaObject so : objects) {
-			if (so != null) {
-				if (StringUtils.isBlank(so.getId())) {
-					so.setId(MongoDBUtils.generateNewId());
-					logger.debug("Generated id: " + so.getId());
+		try {
+			List<Document> documents = new ArrayList<Document>();
+			for (ParaObject so : objects) {
+				if (so != null) {
+					if (StringUtils.isBlank(so.getId())) {
+						so.setId(MongoDBUtils.generateNewId());
+						logger.debug("Generated id: " + so.getId());
+					}
+					if (so.getTimestamp() == null) {
+						so.setTimestamp(Utils.timestamp());
+					}
+					so.setAppid(appid);
+					documents.add(toRow(so, null, false, true));
 				}
-				if (so.getTimestamp() == null) {
-					so.setTimestamp(Utils.timestamp());
-				}
-				so.setAppid(appid);
-				documents.add(toRow(so, null, false, true));
 			}
-		}
-		if (!documents.isEmpty()) {
-			getTable(appid).insertMany(documents);
+			if (!documents.isEmpty()) {
+				getTable(appid).insertMany(documents);
+			}
+		} catch (Exception e) {
+			logger.error(null, e);
+			throwIfNecessary(e);
 		}
 		logger.debug("DAO.createAll() {}", objects.size());
 	}
@@ -304,6 +312,7 @@ public class MongoDBDAO implements DAO {
 			logger.debug("Updated: " + res.getModifiedCount() + ", keys: " + ids);
 		} catch (Exception e) {
 			logger.error(null, e);
+			throwIfNecessary(e);
 		}
 		logger.debug("DAO.updateAll() {}", objects.size());
 	}
@@ -313,14 +322,19 @@ public class MongoDBDAO implements DAO {
 		if (objects == null || objects.isEmpty() || StringUtils.isBlank(appid)) {
 			return;
 		}
-		BasicDBObject query = new BasicDBObject();
-		List<String> list = new ArrayList<String>();
-		for (ParaObject object : objects) {
-			list.add(object.getId());
+		try {
+			BasicDBObject query = new BasicDBObject();
+			List<String> list = new ArrayList<String>();
+			for (ParaObject object : objects) {
+				list.add(object.getId());
+			}
+			query.put(ID, new BasicDBObject("$in", list));
+			getTable(appid).deleteMany(query);
+			logger.debug("DAO.deleteAll() {}", objects.size());
+		} catch (Exception e) {
+			logger.error(null, e);
+			throwIfNecessary(e);
 		}
-		query.put(ID, new BasicDBObject("$in", list));
-		getTable(appid).deleteMany(query);
-		logger.debug("DAO.deleteAll() {}", objects.size());
 	}
 
 	/////////////////////////////////////////////
@@ -390,6 +404,12 @@ public class MongoDBDAO implements DAO {
 			}
 		}
 		return props;
+	}
+
+	private static void throwIfNecessary(Throwable t) {
+		if (t != null && Config.getConfigBoolean("fail_on_write_errors", false)) {
+			throw new RuntimeException("DAO write operation failed!", t);
+		}
 	}
 
 	/**
