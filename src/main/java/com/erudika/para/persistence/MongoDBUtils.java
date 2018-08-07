@@ -32,7 +32,6 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
 
-import java.util.Arrays;
 
 import javax.inject.Singleton;
 
@@ -72,7 +71,7 @@ public final class MongoDBUtils {
 
 		if (!StringUtils.isBlank(DBUSER) && !StringUtils.isBlank(DBPASS)) {
 			MongoCredential credential = MongoCredential.createCredential(DBUSER, DBNAME, DBPASS.toCharArray());
-			mongodbClient = new MongoClient(s, Arrays.asList(credential), options);
+			mongodbClient = new MongoClient(s, credential, options);
 		} else {
 			mongodbClient = new MongoClient(s, options);
 		}

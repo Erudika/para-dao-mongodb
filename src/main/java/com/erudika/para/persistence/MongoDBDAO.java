@@ -43,8 +43,8 @@ import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.BulkWriteOptions;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.UpdateOneModel;
-import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.WriteModel;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
@@ -149,7 +149,7 @@ public class MongoDBDAO implements DAO {
 		try {
 			// if there isn't a document with the same id then create a new document
 			// else replace the document with the same id with the new one
-			getTable(appid).replaceOne(new Document(ID, key), row, new UpdateOptions().upsert(true));
+			getTable(appid).replaceOne(new Document(ID, key), row, new ReplaceOptions().upsert(true));
 		} catch (Exception e) {
 			logger.error(null, e);
 			throwIfNecessary(e);
