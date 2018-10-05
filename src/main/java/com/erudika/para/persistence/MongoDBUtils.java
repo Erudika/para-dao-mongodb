@@ -181,7 +181,7 @@ public final class MongoDBUtils {
 		}
 		try {
 			MongoCollection<Document> collection = getTable(appid);
-			return (collection == null) ? 0 : collection.count();
+			return (collection == null) ? 0 : collection.countDocuments();
 		} catch (Exception e) {
 			logger.error(null, e);
 		}
