@@ -45,6 +45,7 @@ public final class MongoDBUtils {
 	private static final Logger logger = LoggerFactory.getLogger(MongoDBUtils.class);
 	private static MongoClient mongodbClient;
 	private static MongoDatabase mongodb;
+	private static final String DBURI = Config.getConfigParam("mongodb.uri", "");
 	private static final String DBHOST = Config.getConfigParam("mongodb.host", "localhost");
 	private static final int DBPORT = Config.getConfigInt("mongodb.port", 27017);
 	private static final boolean SSL = Config.getConfigBoolean("mongodb.ssl_enabled", false);
@@ -63,9 +64,14 @@ public final class MongoDBUtils {
 		if (mongodb != null) {
 			return mongodb;
 		}
-
-		logger.info("MongoDB host: " + DBHOST + ":" + DBPORT + ", database: " + DBNAME);
-		ServerAddress s = new ServerAddress(DBHOST, DBPORT);
+		ServerAddress s;
+		if (StringUtils.isBlank(DBURI)) {
+			logger.info("MongoDB host: " + DBHOST + ":" + DBPORT + ", database: " + DBNAME);
+			s = new ServerAddress(DBHOST, DBPORT);
+		} else {
+			logger.info("MongoDB host: " + DBURI + ", database: " + DBNAME);
+			s = new ServerAddress(DBURI);
+		}
 		MongoClientOptions options = MongoClientOptions.builder().
 				sslEnabled(SSL).sslInvalidHostNameAllowed(SSL_ALLOW_ALL).build();
 

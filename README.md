@@ -38,6 +38,10 @@ WAR file `para-x.y.z.war`. Para will look for plugins inside `lib` and pick up t
 
 Here are all the configuration properties for this plugin (these go inside your `application.conf`):
 ```ini
+# setting the URI will override host:port below
+# URI is left blank by default
+para.mongodb.uri = ""
+
 para.mongodb.host = "localhost"
 para.mongodb.port = 27017
 para.mongodb.database = "MyApp"
@@ -46,6 +50,11 @@ para.mongodb.password = "pass"
 para.mongodb.ssl_enabled = false
 para.mongodb.ssl_allow_all = false
 ```
+
+You have the option to set either the server URI as a string (e.g. `mongodb://[username:password@]host1[:port1][,host2[:port2],...[,hostN[:portN]]][/[database][?options]]`) or set the 
+host and port combination for a single server instance. The first option allows you to specify multiple server hosts.
+If the URI has a non-blank value in the configuration file, it will override the host+port settings.
+For detils about the server URI syntax, read the docs for [MongoClientURI](https://mongodb.github.io/mongo-java-driver/3.4/javadoc/com/mongodb/MongoClientURI.html).
 
 Finally, set the config property:
 ```
