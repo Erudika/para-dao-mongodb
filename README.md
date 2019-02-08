@@ -38,9 +38,10 @@ WAR file `para-x.y.z.war`. Para will look for plugins inside `lib` and pick up t
 
 Here are all the configuration properties for this plugin (these go inside your `application.conf`):
 ```ini
-# setting the URI will override host:port below
+# setting the URI will override host, port, database, user, password below
 # URI is left blank by default
 para.mongodb.uri = ""
+# para.mongodb.uri = "mongodb://user:pass@localhost:27017,localhost:37017/MyApp"
 
 para.mongodb.host = "localhost"
 para.mongodb.port = 27017
