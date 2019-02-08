@@ -26,12 +26,12 @@ import org.slf4j.LoggerFactory;
 import com.erudika.para.utils.Config;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientURI;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
-
 
 import javax.inject.Singleton;
 
@@ -64,22 +64,24 @@ public final class MongoDBUtils {
 		if (mongodb != null) {
 			return mongodb;
 		}
-		ServerAddress s;
-		if (StringUtils.isBlank(DBURI)) {
-			logger.info("MongoDB host: " + DBHOST + ":" + DBPORT + ", database: " + DBNAME);
-			s = new ServerAddress(DBHOST, DBPORT);
-		} else {
-			logger.info("MongoDB host: " + DBURI + ", database: " + DBNAME);
-			s = new ServerAddress(DBURI);
-		}
+
 		MongoClientOptions options = MongoClientOptions.builder().
 				sslEnabled(SSL).sslInvalidHostNameAllowed(SSL_ALLOW_ALL).build();
 
-		if (!StringUtils.isBlank(DBUSER) && !StringUtils.isBlank(DBPASS)) {
-			MongoCredential credential = MongoCredential.createCredential(DBUSER, DBNAME, DBPASS.toCharArray());
-			mongodbClient = new MongoClient(s, credential, options);
+		if (!StringUtils.isBlank(DBURI)) {
+			logger.info("MongoDB uri: " + DBURI.replaceAll("mongodb://.*@", "mongodb://<user:password>@") + ", database: " + DBNAME);
+			MongoClientURI uri = new MongoClientURI(DBURI, new MongoClientOptions.Builder(options));
+			mongodbClient = new MongoClient(uri);
 		} else {
-			mongodbClient = new MongoClient(s, options);
+			logger.info("MongoDB host: " + DBHOST + ":" + DBPORT + ", database: " + DBNAME);
+			ServerAddress s = new ServerAddress(DBHOST, DBPORT);
+
+			if (!StringUtils.isBlank(DBUSER) && !StringUtils.isBlank(DBPASS)) {
+				MongoCredential credential = MongoCredential.createCredential(DBUSER, DBNAME, DBPASS.toCharArray());
+				mongodbClient = new MongoClient(s, credential, options);
+			} else {
+				mongodbClient = new MongoClient(s, options);
+			}
 		}
 
 		mongodb = mongodbClient.getDatabase(DBNAME);
