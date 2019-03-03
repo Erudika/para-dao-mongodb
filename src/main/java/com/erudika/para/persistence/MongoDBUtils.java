@@ -17,6 +17,8 @@
  */
 package com.erudika.para.persistence;
 
+import com.erudika.para.DestroyListener;
+import com.erudika.para.Para;
 import com.erudika.para.core.App;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
@@ -90,8 +92,8 @@ public final class MongoDBUtils {
 			createTable(Config.getRootAppIdentifier());
 		}
 
-		Runtime.getRuntime().addShutdownHook(new Thread() {
-			public void run() {
+		Para.addDestroyListener(new DestroyListener() {
+			public void onDestroy() {
 				shutdownClient();
 			}
 		});
