@@ -407,7 +407,7 @@ public class MongoDBDAO implements DAO {
 	}
 
 	private static void throwIfNecessary(Throwable t) {
-		if (t != null && Config.getConfigBoolean("fail_on_write_errors", false)) {
+		if (t != null && Config.getConfigBoolean("fail_on_write_errors", true)) {
 			throw new RuntimeException("DAO write operation failed!", t);
 		}
 	}
