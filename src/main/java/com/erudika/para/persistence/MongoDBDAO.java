@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 Erudika. https://erudika.com
+ * Copyright 2013-2021 Erudika. https://erudika.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@
  */
 package com.erudika.para.persistence;
 
-import com.erudika.para.AppCreatedListener;
-import com.erudika.para.AppDeletedListener;
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -68,25 +66,24 @@ public class MongoDBDAO implements DAO {
 	private static final String OBJECT_ID = "_ObjectId";
 	private static final Pattern FIELD_NAME_ENCODING_PATTERN = Pattern.compile("^Base64:.*?:(.*)$");
 
+	static {
+		// set up automatic table creation and deletion
+		App.addAppCreatedListener((App app) -> {
+			if (app != null && !app.isSharingTable()) {
+				MongoDBUtils.createTable(app.getAppIdentifier());
+			}
+		});
+		App.addAppDeletedListener((App app) -> {
+			if (app != null && !app.isSharingTable()) {
+				MongoDBUtils.deleteTable(app.getAppIdentifier());
+			}
+		});
+	}
+
 	/**
 	 * Default constructor.
 	 */
 	public MongoDBDAO() {
-		// set up automatic table creation and deletion
-		App.addAppCreatedListener(new AppCreatedListener() {
-			public void onAppCreated(App app) {
-				if (app != null && !app.isSharingTable()) {
-					MongoDBUtils.createTable(app.getAppIdentifier());
-				}
-			}
-		});
-		App.addAppDeletedListener(new AppDeletedListener() {
-			public void onAppDeleted(App app) {
-				if (app != null && !app.isSharingTable()) {
-					MongoDBUtils.deleteTable(app.getAppIdentifier());
-				}
-			}
-		});
 	}
 
 	/////////////////////////////////////////////
