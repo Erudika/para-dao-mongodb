@@ -26,14 +26,16 @@ import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.erudika.para.utils.Config;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
-import com.mongodb.MongoClientURI;
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.client.MongoClient;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
+import java.util.Collections;
 
 import javax.inject.Singleton;
 
@@ -67,23 +69,21 @@ public final class MongoDBUtils {
 			return mongodb;
 		}
 
-		MongoClientOptions options = MongoClientOptions.builder().
-				sslEnabled(SSL).sslInvalidHostNameAllowed(SSL_ALLOW_ALL).build();
+		MongoClientSettings.Builder options = MongoClientSettings.builder().applyToSslSettings(b ->
+				b.enabled(SSL).invalidHostNameAllowed(SSL_ALLOW_ALL));
 
 		if (!StringUtils.isBlank(DBURI)) {
 			logger.info("MongoDB uri: " + DBURI.replaceAll("mongodb://.*@", "mongodb://<user:password>@") + ", database: " + DBNAME);
-			MongoClientURI uri = new MongoClientURI(DBURI, new MongoClientOptions.Builder(options));
-			mongodbClient = new MongoClient(uri);
+			options.applyConnectionString(new ConnectionString(DBURI));
+			mongodbClient = MongoClients.create(options.build());
 		} else {
 			logger.info("MongoDB host: " + DBHOST + ":" + DBPORT + ", database: " + DBNAME);
 			ServerAddress s = new ServerAddress(DBHOST, DBPORT);
-
+			options.applyToClusterSettings(b -> b.hosts(Collections.singletonList(s)));
 			if (!StringUtils.isBlank(DBUSER) && !StringUtils.isBlank(DBPASS)) {
-				MongoCredential credential = MongoCredential.createCredential(DBUSER, DBNAME, DBPASS.toCharArray());
-				mongodbClient = new MongoClient(s, credential, options);
-			} else {
-				mongodbClient = new MongoClient(s, options);
+				options.credential(MongoCredential.createCredential(DBUSER, DBNAME, DBPASS.toCharArray()));
 			}
+			mongodbClient = MongoClients.create(options.build());
 		}
 
 		mongodb = mongodbClient.getDatabase(DBNAME);
