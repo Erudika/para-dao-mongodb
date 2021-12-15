@@ -58,6 +58,13 @@ public final class MongoDBUtils {
 	private static final String DBUSER = Config.getConfigParam("mongodb.user", "");
 	private static final String DBPASS = Config.getConfigParam("mongodb.password", "");
 
+	static {
+		// Fix for exceptions from Spring Boot when using a different MongoDB host than localhost.
+		System.setProperty("spring.autoconfigure.exclude",
+				"org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration,"
+						+ "org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration");
+	}
+
 	private MongoDBUtils() { }
 
 	/**

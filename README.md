@@ -13,7 +13,12 @@
 It enables your application to store objects directly to a data store (NoSQL) or any relational database (RDBMS)
 and it also automatically indexes those objects and makes them searchable.
 
-This plugin allows Para to store data in a MongoDB database.
+This plugin allows Para to store data in a MongoDB database. It is compatible with the these MongoDB flavors:
+- MongoDB Community Server
+- MongoDB Enterprise Server
+- MongoDB Atlas Cloud
+- Azure Cosmos DB API for MongoDB
+
 
 ## Documentation
 
