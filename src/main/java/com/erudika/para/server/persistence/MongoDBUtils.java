@@ -17,15 +17,15 @@
  */
 package com.erudika.para.server.persistence;
 
-import com.erudika.para.DestroyListener;
-import com.erudika.para.Para;
+import com.erudika.para.core.listeners.DestroyListener;
+import com.erudika.para.core.utils.Para;
 import com.erudika.para.core.App;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.erudika.para.utils.Config;
+import com.erudika.para.core.utils.Config;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
