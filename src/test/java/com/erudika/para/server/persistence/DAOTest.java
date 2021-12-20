@@ -15,13 +15,15 @@
  *
  * For issues and patches go to: https://github.com/erudika
  */
-package com.erudika.para.persistence;
+package com.erudika.para.server.persistence;
 
+import com.erudika.para.server.persistence.MongoDBUtils;
 import com.erudika.para.core.App;
 import com.erudika.para.core.utils.CoreUtils;
 import com.erudika.para.core.Sysprop;
 import com.erudika.para.core.Tag;
 import com.erudika.para.core.User;
+import com.erudika.para.persistence.DAO;
 import com.erudika.para.search.Search;
 import com.erudika.para.utils.Pager;
 import com.erudika.para.utils.Utils;

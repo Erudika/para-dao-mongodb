@@ -15,7 +15,7 @@
  *
  * For issues and patches go to: https://github.com/erudika
  */
-package com.erudika.para.persistence;
+package com.erudika.para.server.persistence;
 
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
@@ -32,7 +32,8 @@ import com.erudika.para.annotations.Locked;
 import com.erudika.para.core.App;
 import com.erudika.para.core.ParaObject;
 import com.erudika.para.core.utils.ParaObjectUtils;
-import static com.erudika.para.persistence.MongoDBUtils.getTable;
+import com.erudika.para.persistence.DAO;
+import static com.erudika.para.server.persistence.MongoDBUtils.getTable;
 import com.erudika.para.utils.Config;
 import com.erudika.para.utils.Pager;
 import com.erudika.para.utils.Utils;

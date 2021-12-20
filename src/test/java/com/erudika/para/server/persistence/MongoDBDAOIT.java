@@ -15,8 +15,10 @@
  *
  * For issues and patches go to: https://github.com/erudika
  */
-package com.erudika.para.persistence;
+package com.erudika.para.server.persistence;
 
+import com.erudika.para.server.persistence.MongoDBDAO;
+import com.erudika.para.server.persistence.MongoDBUtils;
 import com.erudika.para.core.Sysprop;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
