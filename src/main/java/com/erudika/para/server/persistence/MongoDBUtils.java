@@ -37,13 +37,10 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
 import java.util.Collections;
 
-import javax.inject.Singleton;
-
 /**
  * MongoDB DAO utilities for Para.
  * @author Luca Venturella [lucaventurella@gmail.com]
  */
-@Singleton
 public final class MongoDBUtils {
 
 	private static final Logger logger = LoggerFactory.getLogger(MongoDBUtils.class);

@@ -23,7 +23,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import javax.inject.Singleton;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.slf4j.Logger;
@@ -59,7 +58,6 @@ import org.bson.conversions.Bson;
  * MongoDB DAO implementation for Para.
  * @author Luca Venturella [lucaventurella@gmail.com]
  */
-@Singleton
 public class MongoDBDAO implements DAO {
 
 	private static final Logger logger = LoggerFactory.getLogger(MongoDBDAO.class);

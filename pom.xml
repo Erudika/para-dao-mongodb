@@ -67,7 +67,7 @@
 		<dependency>
 			<groupId>com.erudika</groupId>
 			<artifactId>para-core</artifactId>
-			<version>1.43.0</version>
+			<version>1.43.1</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -188,6 +188,7 @@
 							<consoleOutput>true</consoleOutput>
 							<failsOnError>true</failsOnError>
 							<linkXRef>false</linkXRef>
+							<excludes>**/module-info.java</excludes>
 						</configuration>
 						<goals>
 							<goal>check</goal>
