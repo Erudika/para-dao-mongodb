@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 Erudika. https://erudika.com
+ * Copyright 2013-2022 Erudika. https://erudika.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,14 +46,14 @@ public final class MongoDBUtils {
 	private static final Logger logger = LoggerFactory.getLogger(MongoDBUtils.class);
 	private static MongoClient mongodbClient;
 	private static MongoDatabase mongodb;
-	private static final String DBURI = Config.getConfigParam("mongodb.uri", "");
-	private static final String DBHOST = Config.getConfigParam("mongodb.host", "localhost");
-	private static final int DBPORT = Config.getConfigInt("mongodb.port", 27017);
-	private static final boolean SSL = Config.getConfigBoolean("mongodb.ssl_enabled", false);
-	private static final boolean SSL_ALLOW_ALL = Config.getConfigBoolean("mongodb.ssl_allow_all", false);
-	private static final String DBNAME = Config.getConfigParam("mongodb.database", Config.getRootAppIdentifier());
-	private static final String DBUSER = Config.getConfigParam("mongodb.user", "");
-	private static final String DBPASS = Config.getConfigParam("mongodb.password", "");
+	private static final String DBURI = Para.getConfig().getConfigParam("mongodb.uri", "");
+	private static final String DBHOST = Para.getConfig().getConfigParam("mongodb.host", "localhost");
+	private static final int DBPORT = Para.getConfig().getConfigInt("mongodb.port", 27017);
+	private static final boolean SSL = Para.getConfig().getConfigBoolean("mongodb.ssl_enabled", false);
+	private static final boolean SSL_ALLOW_ALL = Para.getConfig().getConfigBoolean("mongodb.ssl_allow_all", false);
+	private static final String DBNAME = Para.getConfig().getConfigParam("mongodb.database", Para.getConfig().getRootAppIdentifier());
+	private static final String DBUSER = Para.getConfig().getConfigParam("mongodb.user", "");
+	private static final String DBPASS = Para.getConfig().getConfigParam("mongodb.password", "");
 
 	static {
 		// Fix for exceptions from Spring Boot when using a different MongoDB host than localhost.
@@ -92,8 +92,8 @@ public final class MongoDBUtils {
 
 		mongodb = mongodbClient.getDatabase(DBNAME);
 
-		if (!existsTable(Config.getRootAppIdentifier())) {
-			createTable(Config.getRootAppIdentifier());
+		if (!existsTable(Para.getConfig().getRootAppIdentifier())) {
+			createTable(Para.getConfig().getRootAppIdentifier());
 		}
 
 		Para.addDestroyListener(new DestroyListener() {
