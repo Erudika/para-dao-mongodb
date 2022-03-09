@@ -67,7 +67,7 @@
 		<dependency>
 			<groupId>com.erudika</groupId>
 			<artifactId>para-core</artifactId>
-			<version>1.44.0</version>
+			<version>1.45.1</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -75,7 +75,7 @@
 		<dependency>
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongodb-driver-sync</artifactId>
-			<version>4.4.1</version>
+			<version>4.5.0</version>
 		</dependency>
 
 		<!-- TESTING -->
@@ -230,9 +230,9 @@
 			</plugin>
 
 			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
+				<groupId>org.sonarsource.scanner.maven</groupId>
 				<artifactId>sonar-maven-plugin</artifactId>
-				<version>3.6.0.1398</version>
+				<version>3.9.1.2184</version>
 			</plugin>
 
 			<plugin>
