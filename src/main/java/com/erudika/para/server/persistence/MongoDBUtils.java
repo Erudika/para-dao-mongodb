@@ -17,25 +17,25 @@
  */
 package com.erudika.para.server.persistence;
 
-import com.erudika.para.core.listeners.DestroyListener;
-import com.erudika.para.core.utils.Para;
 import com.erudika.para.core.App;
-import org.apache.commons.lang3.StringUtils;
-import org.bson.Document;
-import org.bson.types.ObjectId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.erudika.para.core.listeners.DestroyListener;
 import com.erudika.para.core.utils.Config;
+import com.erudika.para.core.utils.Para;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
-import com.mongodb.client.MongoClient;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
 import java.util.Collections;
+import org.apache.commons.lang3.StringUtils;
+import org.bson.Document;
+import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * MongoDB DAO utilities for Para.
@@ -46,14 +46,6 @@ public final class MongoDBUtils {
 	private static final Logger logger = LoggerFactory.getLogger(MongoDBUtils.class);
 	private static MongoClient mongodbClient;
 	private static MongoDatabase mongodb;
-	private static final String DBURI = Para.getConfig().getConfigParam("mongodb.uri", "");
-	private static final String DBHOST = Para.getConfig().getConfigParam("mongodb.host", "localhost");
-	private static final int DBPORT = Para.getConfig().getConfigInt("mongodb.port", 27017);
-	private static final boolean SSL = Para.getConfig().getConfigBoolean("mongodb.ssl_enabled", false);
-	private static final boolean SSL_ALLOW_ALL = Para.getConfig().getConfigBoolean("mongodb.ssl_allow_all", false);
-	private static final String DBNAME = Para.getConfig().getConfigParam("mongodb.database", Para.getConfig().getRootAppIdentifier());
-	private static final String DBUSER = Para.getConfig().getConfigParam("mongodb.user", "");
-	private static final String DBPASS = Para.getConfig().getConfigParam("mongodb.password", "");
 
 	static {
 		// Fix for exceptions from Spring Boot when using a different MongoDB host than localhost.
@@ -73,24 +65,33 @@ public final class MongoDBUtils {
 			return mongodb;
 		}
 
-		MongoClientSettings.Builder options = MongoClientSettings.builder().applyToSslSettings(b ->
-				b.enabled(SSL).invalidHostNameAllowed(SSL_ALLOW_ALL));
+		String dbUri = Para.getConfig().mongoConnectionUri();
+		String dbHost = Para.getConfig().mongoHost();
+		int dbPort = Para.getConfig().mongoPort();
+		boolean sslEnabled = Para.getConfig().mongoSslEnabled();
+		boolean sslAllowAll = Para.getConfig().mongoSslAllowAll();
+		String dbName = Para.getConfig().mongoDatabase();
+		String dbUser = Para.getConfig().mongoAuthUser();
+		String dbPass = Para.getConfig().mongoAuthPassword();
 
-		if (!StringUtils.isBlank(DBURI)) {
-			logger.info("MongoDB uri: " + DBURI.replaceAll("mongodb://.*@", "mongodb://<user:password>@") + ", database: " + DBNAME);
-			options.applyConnectionString(new ConnectionString(DBURI));
+		MongoClientSettings.Builder options = MongoClientSettings.builder().applyToSslSettings(b ->
+				b.enabled(sslEnabled).invalidHostNameAllowed(sslAllowAll));
+
+		if (!StringUtils.isBlank(dbUri)) {
+			logger.info("MongoDB uri: " + dbUri.replaceAll("mongodb://.*@", "mongodb://<user:password>@") + ", database: " + dbName);
+			options.applyConnectionString(new ConnectionString(dbUri));
 			mongodbClient = MongoClients.create(options.build());
 		} else {
-			logger.info("MongoDB host: " + DBHOST + ":" + DBPORT + ", database: " + DBNAME);
-			ServerAddress s = new ServerAddress(DBHOST, DBPORT);
+			logger.info("MongoDB host: " + dbHost + ":" + dbPort + ", database: " + dbName);
+			ServerAddress s = new ServerAddress(dbHost, dbPort);
 			options.applyToClusterSettings(b -> b.hosts(Collections.singletonList(s)));
-			if (!StringUtils.isBlank(DBUSER) && !StringUtils.isBlank(DBPASS)) {
-				options.credential(MongoCredential.createCredential(DBUSER, DBNAME, DBPASS.toCharArray()));
+			if (!StringUtils.isBlank(dbUser) && !StringUtils.isBlank(dbPass)) {
+				options.credential(MongoCredential.createCredential(dbUser, dbName, dbPass.toCharArray()));
 			}
 			mongodbClient = MongoClients.create(options.build());
 		}
 
-		mongodb = mongodbClient.getDatabase(DBNAME);
+		mongodb = mongodbClient.getDatabase(dbName);
 
 		if (!existsTable(Para.getConfig().getRootAppIdentifier())) {
 			createTable(Para.getConfig().getRootAppIdentifier());

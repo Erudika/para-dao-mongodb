@@ -17,26 +17,16 @@
  */
 package com.erudika.para.server.persistence;
 
-import java.lang.annotation.Annotation;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import org.apache.commons.lang3.StringUtils;
-import org.bson.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.erudika.para.core.annotations.Locked;
 import com.erudika.para.core.App;
 import com.erudika.para.core.ParaObject;
-import com.erudika.para.core.utils.ParaObjectUtils;
+import com.erudika.para.core.annotations.Locked;
 import com.erudika.para.core.persistence.DAO;
-import static com.erudika.para.server.persistence.MongoDBUtils.getTable;
 import com.erudika.para.core.utils.Config;
 import com.erudika.para.core.utils.Pager;
 import com.erudika.para.core.utils.Para;
+import com.erudika.para.core.utils.ParaObjectUtils;
 import com.erudika.para.core.utils.Utils;
+import static com.erudika.para.server.persistence.MongoDBUtils.getTable;
 import com.mongodb.BasicDBObject;
 import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.MongoCursor;
@@ -47,13 +37,23 @@ import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.WriteModel;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
+import java.lang.annotation.Annotation;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.lang3.StringUtils;
+import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * MongoDB DAO implementation for Para.
@@ -404,7 +404,7 @@ public class MongoDBDAO implements DAO {
 	}
 
 	private static void throwIfNecessary(Throwable t) {
-		if (t != null && Para.getConfig().getConfigBoolean("fail_on_write_errors", true)) {
+		if (t != null && Para.getConfig().exceptionOnWriteErrorsEnabled()) {
 			throw new RuntimeException("DAO write operation failed!", t);
 		}
 	}
