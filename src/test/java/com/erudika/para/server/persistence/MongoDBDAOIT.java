@@ -17,12 +17,12 @@
  */
 package com.erudika.para.server.persistence;
 
-import com.erudika.para.server.persistence.MongoDBDAO;
-import com.erudika.para.server.persistence.MongoDBUtils;
 import com.erudika.para.core.Sysprop;
+import java.util.List;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.BeforeClass;
@@ -128,6 +128,36 @@ public class MongoDBDAOIT extends DAOTest {
 		assertEquals(".", s2.getProperty("."));
 
 		d.delete(s1);
+	}
+
+	@Test
+	public void testInsertManyWithIdDuplication() {
+		MongoDBDAO d = ((MongoDBDAO) dao());
+		Sysprop s1 = new Sysprop("id:one");
+		Sysprop s2 = new Sysprop("id:two");
+		Sysprop s3 = new Sysprop("id:two");
+		Sysprop s4 = new Sysprop("id:three");
+
+		d.createAll(List.of(s1, s2, s3, s4));
+
+		assertNotNull(d.read(s1.getId()));
+		assertNotNull(d.read(s2.getId()));
+		assertNotNull(d.read(s3.getId()));
+		assertNotNull(d.read(s4.getId()));
+
+		s1.setName("updated");
+		s2.setName("updated");
+		s3.setName("updated");
+		s4.setName("updated");
+
+		d.updateAll(List.of(s1, s2, s3, s4));
+
+		assertEquals("updated", d.read(s1.getId()).getName());
+		assertEquals("updated", d.read(s2.getId()).getName());
+		assertEquals("updated", d.read(s3.getId()).getName());
+		assertEquals("updated", d.read(s4.getId()).getName());
+
+		d.deleteAll(List.of(s1, s2, s3, s4));
 	}
 
 }

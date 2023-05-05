@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -206,7 +207,7 @@ public class MongoDBDAO implements DAO {
 		}
 		try {
 			List<Document> documents = new ArrayList<Document>();
-			for (ParaObject so : objects) {
+			for (ParaObject so : new LinkedHashSet<>(objects)) { // fix duplicate _id errors by using a set
 				if (so != null) {
 					if (StringUtils.isBlank(so.getId())) {
 						so.setId(MongoDBUtils.generateNewId());
