@@ -43,7 +43,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -206,8 +205,9 @@ public class MongoDBDAO implements DAO {
 			return;
 		}
 		try {
-			List<Document> documents = new ArrayList<Document>();
-			for (ParaObject so : new LinkedHashSet<>(objects)) { // fix duplicate _id errors by using a set
+			// fix duplicate _id errors by using a map
+			Map<String, Document> docs = new LinkedHashMap<>();
+			for (ParaObject so : objects) {
 				if (so != null) {
 					if (StringUtils.isBlank(so.getId())) {
 						so.setId(MongoDBUtils.generateNewId());
@@ -217,11 +217,14 @@ public class MongoDBDAO implements DAO {
 						so.setTimestamp(Utils.timestamp());
 					}
 					so.setAppid(appid);
-					documents.add(toRow(so, null, false, true));
+					if (docs.containsKey(so.getId())) {
+						logger.warn("Duplicate id found in batch which will be overwritten: {}", so.getId());
+					}
+					docs.put(so.getId(), toRow(so, null, false, true));
 				}
 			}
-			if (!documents.isEmpty()) {
-				getTable(appid).insertMany(documents);
+			if (!docs.isEmpty()) {
+				getTable(appid).insertMany(new ArrayList<>(docs.values()));
 			}
 		} catch (Exception e) {
 			logger.error(null, e);

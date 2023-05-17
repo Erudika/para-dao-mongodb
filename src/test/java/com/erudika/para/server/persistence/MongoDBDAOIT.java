@@ -135,7 +135,9 @@ public class MongoDBDAOIT extends DAOTest {
 		MongoDBDAO d = ((MongoDBDAO) dao());
 		Sysprop s1 = new Sysprop("id:one");
 		Sysprop s2 = new Sysprop("id:two");
+		s2.setName("name1");
 		Sysprop s3 = new Sysprop("id:two");
+		s3.setName("name2");
 		Sysprop s4 = new Sysprop("id:three");
 
 		d.createAll(List.of(s1, s2, s3, s4));
