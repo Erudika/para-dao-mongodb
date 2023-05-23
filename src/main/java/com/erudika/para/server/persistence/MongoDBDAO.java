@@ -32,6 +32,7 @@ import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.BulkWriteOptions;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.ReplaceOneModel;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.WriteModel;
@@ -206,7 +207,7 @@ public class MongoDBDAO implements DAO {
 		}
 		try {
 			// fix duplicate _id errors by using a map
-			Map<String, Document> docs = new LinkedHashMap<>();
+			List<WriteModel<Document>> bulkOperations = new ArrayList<>();
 			for (ParaObject so : objects) {
 				if (so != null) {
 					if (StringUtils.isBlank(so.getId())) {
@@ -217,14 +218,14 @@ public class MongoDBDAO implements DAO {
 						so.setTimestamp(Utils.timestamp());
 					}
 					so.setAppid(appid);
-					if (docs.containsKey(so.getId())) {
-						logger.warn("Duplicate id found in batch which will be overwritten: {}", so.getId());
-					}
-					docs.put(so.getId(), toRow(so, null, false, true));
+					Document doc = toRow(so, null, false, true);
+					Object id = doc.get(ID);
+					doc.remove(ID); // fix MongoWriteConcernException error
+					bulkOperations.add(new ReplaceOneModel<>(Filters.eq(ID, id), doc, new ReplaceOptions().upsert(true)));
 				}
 			}
-			if (!docs.isEmpty()) {
-				getTable(appid).insertMany(new ArrayList<>(docs.values()));
+			if (!bulkOperations.isEmpty()) {
+				getTable(appid).bulkWrite(bulkOperations);
 			}
 		} catch (Exception e) {
 			logger.error(null, e);

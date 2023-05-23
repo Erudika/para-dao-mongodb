@@ -18,6 +18,8 @@
 package com.erudika.para.server.persistence;
 
 import com.erudika.para.core.Sysprop;
+import com.erudika.para.core.utils.Utils;
+import java.util.Collections;
 import java.util.List;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
@@ -133,33 +135,48 @@ public class MongoDBDAOIT extends DAOTest {
 	@Test
 	public void testInsertManyWithIdDuplication() {
 		MongoDBDAO d = ((MongoDBDAO) dao());
+		d.create(new Sysprop("id:three"));
 		Sysprop s1 = new Sysprop("id:one");
 		Sysprop s2 = new Sysprop("id:two");
 		s2.setName("name1");
 		Sysprop s3 = new Sysprop("id:two");
 		s3.setName("name2");
 		Sysprop s4 = new Sysprop("id:three");
+		s4.setName("name4");
+		Sysprop s5 = new Sysprop(Utils.getNewId());
+		s5.setName("name5");
+		s5.addProperty("_id", "id:three");
+		s5.addProperty("id", "id:three");
+		s5.addProperty("props", Collections.singletonMap("_id", "id:three"));
+		Sysprop s6 = new Sysprop(Utils.getNewId());
+		s6.setName("name6");
+		s6.addProperty("_id", "id:three");
+		s6.addProperty("id", "id:three");
+		s6.addProperty("props", Collections.singletonMap("_id", "id:three"));
 
-		d.createAll(List.of(s1, s2, s3, s4));
+		d.createAll(List.of(s1, s2, s3, s4, s5, s6));
 
 		assertNotNull(d.read(s1.getId()));
 		assertNotNull(d.read(s2.getId()));
 		assertNotNull(d.read(s3.getId()));
 		assertNotNull(d.read(s4.getId()));
+		assertNotNull(d.read(s5.getId()));
 
-		s1.setName("updated");
-		s2.setName("updated");
-		s3.setName("updated");
-		s4.setName("updated");
+		s1.setName("updated1");
+		s2.setName("updated2");
+		s3.setName("updated3");
+		s4.setName("updated4");
+		s5.setName("updated5");
 
-		d.updateAll(List.of(s1, s2, s3, s4));
+		d.updateAll(List.of(s1, s2, s3, s4, s5));
 
-		assertEquals("updated", d.read(s1.getId()).getName());
-		assertEquals("updated", d.read(s2.getId()).getName());
-		assertEquals("updated", d.read(s3.getId()).getName());
-		assertEquals("updated", d.read(s4.getId()).getName());
+		assertEquals("updated1", d.read(s1.getId()).getName());
+		assertEquals("updated3", d.read(s2.getId()).getName());
+		assertEquals("updated3", d.read(s3.getId()).getName());
+		assertEquals("updated4", d.read(s4.getId()).getName());
+		assertEquals("updated5", d.read(s5.getId()).getName());
 
-		d.deleteAll(List.of(s1, s2, s3, s4));
+		d.deleteAll(List.of(s1, s2, s3, s4, s5, s6));
 	}
 
 }
