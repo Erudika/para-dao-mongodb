@@ -21,14 +21,14 @@ import com.erudika.para.core.Sysprop;
 import com.erudika.para.core.utils.Utils;
 import java.util.Collections;
 import java.util.List;
-import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 /**
  *
@@ -42,7 +42,7 @@ public class MongoDBDAOIT extends DAOTest {
 		super(new MongoDBDAO());
 	}
 
-	@BeforeClass
+	@BeforeAll
 	public static void setUpClass() throws InterruptedException {
 		System.setProperty("para.mongodb.port", "37017");
 		System.setProperty("para.app_name", ROOT_APP_NAME);
@@ -53,7 +53,7 @@ public class MongoDBDAOIT extends DAOTest {
 		MongoDBUtils.createTable(appid3);
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void tearDownClass() {
 		MongoDBUtils.deleteTable(ROOT_APP_NAME);
 		MongoDBUtils.deleteTable(appid1);
