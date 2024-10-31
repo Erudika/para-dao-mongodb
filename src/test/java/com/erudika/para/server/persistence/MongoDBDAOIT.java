@@ -19,6 +19,13 @@ package com.erudika.para.server.persistence;
 
 import com.erudika.para.core.Sysprop;
 import com.erudika.para.core.utils.Utils;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import de.flapdoodle.embed.mongo.commands.ServerAddress;
+import de.flapdoodle.embed.mongo.distribution.Version;
+import de.flapdoodle.embed.mongo.transitions.Mongod;
+import de.flapdoodle.embed.mongo.transitions.RunningMongodProcess;
+import de.flapdoodle.reverse.TransitionWalker;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.AfterAll;
@@ -37,6 +44,8 @@ import org.junit.jupiter.api.Test;
 public class MongoDBDAOIT extends DAOTest {
 
 	private static final String ROOT_APP_NAME = "para-test";
+	private static TransitionWalker.ReachedState<RunningMongodProcess> running;
+	private static MongoClient mongo;
 
 	public MongoDBDAOIT() {
 		super(new MongoDBDAO());
@@ -44,9 +53,15 @@ public class MongoDBDAOIT extends DAOTest {
 
 	@BeforeAll
 	public static void setUpClass() throws InterruptedException {
-		System.setProperty("para.mongodb.port", "37017");
+		running = Mongod.instance().start(Version.Main.V8_0);
+		ServerAddress serverAddress = running.current().getServerAddress();
+		mongo = MongoClients.create("mongodb://" + serverAddress);
+//		MongoDatabase db = mongo.getDatabase("test");
+
+		System.setProperty("para.mongodb.port", "" + serverAddress.getPort());
 		System.setProperty("para.app_name", ROOT_APP_NAME);
 		System.setProperty("para.cluster_name", ROOT_APP_NAME);
+
 		MongoDBUtils.createTable(ROOT_APP_NAME);
 		MongoDBUtils.createTable(appid1);
 		MongoDBUtils.createTable(appid2);
@@ -60,6 +75,14 @@ public class MongoDBDAOIT extends DAOTest {
 		MongoDBUtils.deleteTable(appid2);
 		MongoDBUtils.deleteTable(appid3);
 		MongoDBUtils.shutdownClient();
+
+		mongo.close();
+		running.current().stop();
+//		running.close();
+//		if (this.mongod != null) {
+//			this.mongod.stop();
+//			this.mongodExe.stop();
+//		}
 	}
 
 	@Test

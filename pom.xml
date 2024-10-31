@@ -109,6 +109,12 @@
 			<version>1.3.4</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>de.flapdoodle.embed</groupId>
+			<artifactId>de.flapdoodle.embed.mongo</artifactId>
+			<version>4.18.0</version>
+			<!--<scope>test</scope>-->
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -252,7 +258,10 @@
 				</configuration>
 			</plugin>
 
-			<plugin>
+
+
+
+<!--			<plugin>
 				<groupId>com.github.joelittlejohn.embedmongo</groupId>
 				<artifactId>embedmongo-maven-plugin</artifactId>
 				<version>0.4.2</version>
@@ -272,6 +281,16 @@
 						<artifactId>logback-classic</artifactId>
 						<version>1.3.12</version>
 					</dependency>
+					<dependency>
+						<groupId>de.flapdoodle.embed</groupId>
+						<artifactId>de.flapdoodle.embed.mongo</artifactId>
+						<version>4.17.0</version>
+					</dependency>
+					<dependency>
+						<groupId>de.flapdoodle.embed</groupId>
+						<artifactId>de.flapdoodle.embed.process</artifactId>
+						<version>4.14.0</version>
+					</dependency>
 				</dependencies>
 				<executions>
 					<execution>
@@ -280,13 +299,14 @@
 							<goal>start</goal>
 						</goals>
 						<configuration>
-							<!-- Use different than default port to prevent conflicts -->
+							 Use different than default port to prevent conflicts
 							<port>37017</port>
-							<version>3.6.20</version>
+							<version>rhel90-7.0.15</version>
 							<databaseDirectory>${project.build.directory}/mongotest</databaseDirectory>
 							<bindIp>127.0.0.1</bindIp>
 							<skip>${skipITs}</skip>
 							<features>sync_delay,no_http_interface_arg</features>
+							<features></features>
 						</configuration>
 					</execution>
 					<execution>
@@ -299,7 +319,7 @@
 						</configuration>
 					</execution>
 				</executions>
-			</plugin>
+			</plugin>-->
 		</plugins>
 	</build>
 
