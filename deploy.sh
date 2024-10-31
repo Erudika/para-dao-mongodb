@@ -15,7 +15,7 @@ git log $lastver..HEAD --oneline > changelog.txt && \
 echo "" >> changelog.txt && \
 echo "" >> changelog.txt && \
 echo "### :package: [Download JAR](https://oss.sonatype.org/service/local/repositories/releases/content/com/erudika/para-dao-mongodb/${ver}/para-dao-mongodb-${ver}-shaded.jar)" >> changelog.txt && \
-hub release create -F changelog.txt -t "v$ver" $ver && \
+gh release create -F changelog.txt -t "v$ver" $ver && \
 rm changelog.txt
 
 docker build -t erudikaltd/para-dao-mongodb:${ver} . && docker push erudikaltd/para-dao-mongodb:${ver}
