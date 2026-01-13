@@ -23,6 +23,5 @@ module com.erudika.para.server.persistence.mongodb {
 	requires org.slf4j;
 	requires org.mongodb.driver.core;
 	requires org.mongodb.driver.sync.client;
-	exports com.erudika.para.server.persistence;
 	provides com.erudika.para.core.persistence.DAO with com.erudika.para.server.persistence.MongoDBDAO;
 }

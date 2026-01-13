@@ -3,8 +3,7 @@
 
 > ### MongoDB DAO plugin for Para
 
-[![Build Status](https://travis-ci.org/Erudika/para-dao-mongodb.svg?branch=master)](https://travis-ci.org/Erudika/para-dao-mongodb)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.erudika/para-dao-mongodb/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.erudika/para-dao-mongodb)
+[![Maven Central Version](https://img.shields.io/maven-central/v/com.erudika/para-dao-mongodb)](https://central.sonatype.com/artifact/com.erudika/para-dao-mongodb)
 [![Join the chat at https://gitter.im/Erudika/para](https://badges.gitter.im/Erudika/para.svg)](https://gitter.im/Erudika/para?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## What is this?
