@@ -68,17 +68,19 @@ public class MongoDBDAO implements DAO {
 	private static final Pattern FIELD_NAME_ENCODING_PATTERN = Pattern.compile("^Base64:.*?:(.*)$");
 
 	static {
-		// set up automatic table creation and deletion
-		App.addAppCreatedListener((App app) -> {
-			if (app != null && !app.isSharingTable()) {
-				MongoDBUtils.createTable(app.getAppIdentifier());
-			}
-		});
-		App.addAppDeletedListener((App app) -> {
-			if (app != null && !app.isSharingTable()) {
-				MongoDBUtils.deleteTable(app.getAppIdentifier());
-			}
-		});
+		if (MongoDBDAO.class.getSimpleName().equals(Para.getConfig().daoPlugin())) {
+			// set up automatic table creation and deletion
+			App.addAppCreatedListener((App app) -> {
+				if (app != null && !app.isSharingTable()) {
+					MongoDBUtils.createTable(app.getAppIdentifier());
+				}
+			});
+			App.addAppDeletedListener((App app) -> {
+				if (app != null && !app.isSharingTable()) {
+					MongoDBUtils.deleteTable(app.getAppIdentifier());
+				}
+			});
+		}
 	}
 
 	/**
